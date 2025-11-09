@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Productivity Dashboard</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --success: #10b981;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --border: #e5e7eb;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+    }
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    select, button {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    select {
+      min-width: 200px;
+    }
+    button {
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 1.2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid var(--border);
+    }
+    .dept-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    .metric {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--success);
+    }
+    .subtext {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-top: 0.3rem;
+    }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #6b7280;
+    }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 1rem;
+      border-radius: 6px;
+      text-align: center;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Department Productivity Dashboard</h1>
+
+    <div class="controls">
+      <select id="userSelect">
+        <option value="">-- Select User --</option>
+      </select>
+      <button onclick="loadData()">Refresh Data</button>
+    </div>
+
+    <div id="loading" class="loading">Loading data...</div>
+    <div id="error" class="error" style="display:none;"></div>
+
+    <div id="dashboard" class="stats-grid" style="display:none;"></div>
+  </div>
+
+  <script>
+    // === CONFIGURATION ===
+    // CHANGE THIS URL to your S3 public link or Lambda API Gateway URL
+    const DATA_URL = "https://your-bucket.s3.amazonaws.com/productivity.txt";
+
+    // Map hostnames (lowercase) to departments
+    const HOST_TO_DEPT = {
+      'x-ray03': 'X-Ray',
+      'x-ray04': 'X-Ray',
+      'cardiobit03': 'Cardiology',
+      'mrtdoc11': 'MRT',
+      'mrt-doc09': 'MRT',
+      'mrtdoc02': 'MRT',
+      'emergp11': 'Emergency',
+      'emergp09': 'Emergency',
+      'emergp03': 'Emergency',
+      'orthopedy09': 'Orthopedics',
+      'orthopedy14': 'Orthopedics',
+      'matlux01': 'Maternity',
+      'maternity08': 'Maternity',
+      'maternity06': 'Maternity',
+      'maternity07': 'Maternity',
+      'vascular02': 'Vascular',
+      'reanim1-4': 'Reanimation',
+      'urology12': 'Urology',
+      'lor18': 'LOR',
+      // Add more as needed
+    };
+
+    // Productivity: 1 minute saved per 1000 characters typed (adjustable)
+    const CHARS_PER_MINUTE_SAVED = 1000;
+
+    let rawData = [];
+    let departments = {};
+
+    // Fetch and parse data
+    async function loadData() {
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const dashboard = document.getElementById('dashboard');
+      const userSelect = document.getElementById('userSelect');
+
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      dashboard.style.display = 'none';
+      userSelect.innerHTML = '<option value="">-- Select User --</option>';
+
+      try {
+        const response = await fetch(DATA_URL + '?t=' + Date.now()); // cache bust
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+
+        // Parse lines
+        rawData = text.trim().split('\n')
+          .map(line => line.trim())
+          .filter(line => line.includes('|'))
+          .map(line => {
+            const [hostPart, avgPart] = line.split('|').map(s => s.trim());
+            const hostname = hostPart.split(' ')[0].toLowerCase();
+            const chars = parseFloat(avgPart.match(/([\d,]+\.?\d*)/)[1].replace(/,/g, ''));
+            return { hostname, chars, original: hostPart };
+          });
+
+        processData();
+        renderDashboard();
+        populateUserDropdown();
+
+        loading.style.display = 'none';
+        dashboard.style.display = 'grid';
+
+      } catch (err) {
+        loading.style.display = 'none';
+        error.style.display = 'block';
+        error.textContent = `Failed to load data: ${err.message}`;
+      }
+    }
+
+    function processData() {
+      departments = {};
+
+      rawData.forEach(item => {
+        const dept = HOST_TO_DEPT[item.hostname] || 'Unknown';
+        if (!departments[dept]) {
+          departments[dept] = { total: 0, count: 0, users: [] };
+        }
+        departments[dept].total += item.chars;
+        departments[dept].count += 1;
+        departments[dept].users.push(item);
+      });
+
+      // Calculate averages
+      Object.keys(departments).forEach(dept => {
+        const avgChars = departments[dept].total / departments[dept].count;
+        const minsSaved = avgChars / CHARS_PER_MINUTE_SAVED;
+        departments[dept].avgChars = avgChars;
+        departments[dept].minsSaved = minsSaved;
+      });
+    }
+
+    function populateUserDropdown() {
+      const userSelect = document.getElementById('userSelect');
+      rawData.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.hostname;
+        opt.textContent = item.original;
+        userSelect.appendChild(opt);
+      });
+
+      userSelect.addEventListener('change', () => {
+        const selected = userSelect.value;
+        if (selected) {
+          const user = rawData.find(u => u.hostname === selected);
+          const dept = HOST_TO_DEPT[selected] || 'Unknown';
+          alert(`${user.original}\nDepartment: ${dept}\nDaily Avg: ${user.chars.toLocaleString()} chars\n~${(user.chars / CHARS_PER_MINUTE_SAVED).toFixed(1)} mins saved/day`);
+        }
+      });
+    }
+
+    function renderDashboard() {
+      const dashboard = document.getElementById('dashboard');
+      dashboard.innerHTML = '';
+
+      const sortedDepts = Object.entries(departments).sort((a, b) => b[1].minsSaved - a[1].minsSaved);
+
+      sortedDepts.forEach(([dept, data]) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="dept-name">${dept} <small>(${data.count} users)</small></div>
+          <div class="metric">~${data.minsSaved.toFixed(1)} min/day</div>
+          <div class="subtext">Avg per user: ${data.avgChars.toLocaleString(undefined, {maximumFractionDigits: 0})} chars</div>
+        `;
+        dashboard.appendChild(card);
+      });
+    }
+
+    // Load on start
+    window.onload = loadData;
+  </script>
+</body>
+</html>
