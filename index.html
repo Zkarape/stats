@@ -8,9 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #3b82f6; --success: #10b981; --bg: #f8fafc; --card: #ffffff;
-      --text: #1e293b; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-      --accent: #6366f1;
+      --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+      --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1); --accent: #6366f1;
     }
     * { box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1rem; }
@@ -19,14 +19,22 @@
     h1 { color: var(--primary); font-size: 2rem; margin: 0 0 0.5rem; }
     .subtitle { color: #64748b; font-size: 1rem; }
 
-    .controls { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; justify-content: center; align-items: center; }
-    select, button {
+    .controls {
+      display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;
+      justify-content: center; align-items: center;
+    }
+    select, button, input[type="checkbox"] {
       padding: 0.65rem 1.2rem; border: 1px solid var(--border); border-radius: 8px;
       font-size: 1rem; transition: 0.2s;
     }
     select { min-width: 200px; background: white; }
     button { background: var(--primary); color: white; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); }
     button:hover { background: #2563eb; transform: translateY(-1px); }
+
+    .view-toggle {
+      display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: #475569;
+    }
+    .view-toggle label { cursor: pointer; }
 
     .dept-card {
       background: var(--card); border-radius: 12px; padding: 1.5rem;
@@ -40,25 +48,35 @@
     .dept-name { font-weight: 700; font-size: 1.3rem; color: var(--primary); }
     .dept-toggle { font-size: 1.2rem; color: var(--accent); }
 
-    .dept-metric { font-size: 1.6rem; font-weight: 800; color: var(--success); margin: 0.5rem 0; }
+    .dept-metric {
+      font-size: 1.6rem; font-weight: 800; margin: 0.5rem 0;
+    }
     .dept-subtext { font-size: 0.9rem; color: #64748b; }
 
     .sort-controls {
-      display: flex; gap: 0.5rem; margin-top: 0.75rem; font-size: 0.85rem;
+      display: flex; gap: 0.5rem; margin: 1rem 0; font-size: 0.85rem;
     }
     .sort-controls select { font-size: 0.8rem; padding: 0.3rem 0.6rem; }
 
     .users-container { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: none; }
     .users-container.open { display: block; }
-    .user-card {
-      background: #f8fafc; border-radius: 8px; padding: 1rem;
-      margin-bottom: 0.75rem; border: 1px solid var(--border);
+
+    .user-list {
+      margin-bottom: 1.5rem;
+    }
+    .user-item {
+      background: #f8fafc; border-radius: 8px; padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem; border: 1px solid var(--border);
       display: flex; justify-content: space-between; align-items: center;
     }
-    .user-info { flex: 1; }
     .user-name { font-weight: 600; color: var(--text); }
-    .user-metric { font-weight: 700; color: var(--success); font-size: 1.1rem; }
-    .user-chart { width: 100px; height: 50px; }
+    .user-metric { font-weight: 700; font-size: 1rem; }
+
+    .user-chart-container {
+      background: white; padding: 1rem; border-radius: 12px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+      margin-top: 1rem;
+    }
 
     .chart-container { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow); margin: 2rem 0; border: 1px solid var(--border); }
     .loading, .error { text-align: center; padding: 2rem; border-radius: 12px; margin: 1rem 0; }
@@ -72,11 +90,15 @@
   <div class="container">
     <header>
       <h1>Productivity Dashboard</h1>
-      <p class="subtitle">Click a department to view users • Sort by average or total chars</p>
+      <p class="subtitle">Click a department → See all users in one chart</p>
     </header>
 
     <div class="controls">
       <button onclick="loadData()">Refresh Data</button>
+      <div class="view-toggle">
+        <input type="checkbox" id="showSavedTime" onchange="toggleTimeView(this.checked)">
+        <label for="showSavedTime">Show Time Saved (instead of Wasted)</label>
+      </div>
     </div>
 
     <div id="loading" class="loading">Loading data...</div>
@@ -89,19 +111,23 @@
     <div id="departments"></div>
 
     <div class="footer">
-      Auto-refreshes every 5 minutes • 1 min saved per 1,000 chars
+      Auto-refreshes every 5 minutes • 1 min saved per 1,000 chars • Typing speed: 20 WPM
     </div>
   </div>
 
   <script>
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
     const CHARS_PER_MINUTE_SAVED = 1000;
-    const AUTO_REFRESH_MS = 5 * 180 * 1000;
+    const TYPING_SPEED_WPM = 20;
+    const CHARS_PER_WORD = 5;
+    const CHARS_PER_MINUTE_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD;
+    const AUTO_REFRESH_MS = 5 * 60 * 1000;
 
     let rawData = [];
     let departments = {};
-    let userCharts = {};
-    let sortStates = {}; // { dept: { type: 'avg', dir: 'desc' } }
+    let userCharts = {}; // { dept: chartInstance }
+    let sortStates = {};
+    let showSavedTime = false;
 
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
@@ -183,6 +209,7 @@
         const avg = departments[dept].total / departments[dept].count;
         departments[dept].avgChars = avg;
         departments[dept].avgMins = avg / CHARS_PER_MINUTE_SAVED;
+        departments[dept].avgMinsTyped = avg / CHARS_PER_MINUTE_TYPED;
       });
     }
 
@@ -191,16 +218,20 @@
       container.innerHTML = '';
 
       const sorted = Object.entries(departments)
-        .sort((a, b) => b[1].avgMins - a[1].avgMins);
+        .sort((a, b) => (showSavedTime ? b[1].avgMins : b[1].avgMinsTyped) - (showSavedTime ? a[1].avgMins : a[1].avgMinsTyped));
 
       sorted.forEach(([dept, data]) => {
+        const mins = showSavedTime ? data.avgMins : data.avgMinsTyped;
+        const label = showSavedTime ? 'min saved' : 'min wasted';
+        const color = showSavedTime ? 'var(--success)' : 'var(--danger)';
+
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
         deptCard.innerHTML = `
           <div class="dept-header" onclick="toggleUsers('${dept}')">
             <div>
               <div class="dept-name">${dept}</div>
-              <div class="dept-metric">~${data.avgMins.toFixed(1)} min/day</div>
+              <div class="dept-metric" style="color:${color}">~${mins.toFixed(1)} ${label}/day</div>
               <div class="dept-subtext">
                 ${data.count} user${data.count > 1 ? 's' : ''} • 
                 ${data.avgChars.toLocaleString('en', {maximumFractionDigits: 0})} chars avg
@@ -221,70 +252,96 @@
       toggle.textContent = isOpen ? 'Up Arrow' : 'Down Arrow';
 
       if (isOpen && !container.dataset.rendered) {
-        renderUsers(dept);
+        renderUserSection(dept);
         container.dataset.rendered = 'true';
       }
     };
 
-    function renderUsers(dept) {
+    function renderUserSection(dept) {
       const container = document.getElementById(`users-${dept}`);
       const state = sortStates[dept];
       let users = [...departments[dept].users];
 
-      // Sort users
       users.sort((a, b) => {
-        let valA, valB;
-        if (state.type === 'avg') {
-          valA = a.chars; valB = b.chars;
-        } else {
-          valA = a.chars; valB = b.chars; // same for total
-        }
+        const valA = a.chars;
+        const valB = b.chars;
         return state.dir === 'desc' ? valB - valA : valA - valB;
       });
 
       container.innerHTML = `
         <div class="sort-controls">
           <select onchange="updateSort('${dept}', 'type', this.value)">
-            <option value="avg" ${state.type==='avg'?'selected':''}>Avg Chars</option>
-            <option value="total" ${state.type==='total'?'selected':''}>Total Chars</option>
+            <option value="avg" selected>Avg Chars</option>
+            <option value="total">Total Chars</option>
           </select>
           <select onchange="updateSort('${dept}', 'dir', this.value)">
-            <option value="desc" ${state.dir==='desc'?'selected':''}>Descending</option>
-            <option value="asc" ${state.dir==='asc'?'selected':''}>Ascending</option>
+            <option value="desc" selected>Descending</option>
+            <option value="asc">Ascending</option>
           </select>
+        </div>
+
+        <div class="user-list" id="user-list-${dept}"></div>
+
+        <div class="user-chart-container">
+          <canvas id="user-chart-${dept}"></canvas>
         </div>
       `;
 
+      const list = document.getElementById(`user-list-${dept}`);
       users.forEach(user => {
-        const mins = (user.chars / CHARS_PER_MINUTE_SAVED).toFixed(1);
-        const userCard = document.createElement('div');
-        userCard.className = 'user-card';
-        userCard.innerHTML = `
-          <div class="user-info">
-            <div class="user-name">${user.original}</div>
-            <div class="user-metric">${user.chars.toLocaleString()} chars • ~${mins} min/day</div>
-          </div>
-          <canvas class="user-chart" id="chart-${user.hostname}"></canvas>
-        `;
-        container.appendChild(userCard);
+        const mins = showSavedTime ? (user.chars / CHARS_PER_MINUTE_SAVED).toFixed(1) : (user.chars / CHARS_PER_MINUTE_TYPED).toFixed(1);
+        const label = showSavedTime ? 'min saved' : 'min wasted';
+        const color = showSavedTime ? 'var(--success)' : 'var(--danger)';
 
-        const ctx = document.getElementById(`chart-${user.hostname}`).getContext('2d');
-        userCharts[user.hostname] = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: [''],
-            datasets: [{
-              data: [user.chars],
-              backgroundColor: 'rgba(16, 185, 129, 0.7)',
-              borderRadius: 4,
-            }]
+        const item = document.createElement('div');
+        item.className = 'user-item';
+        item.innerHTML = `
+          <div class="user-name">${user.original}</div>
+          <div class="user-metric" style="color:${color}">
+            ${user.chars.toLocaleString()} chars • ~${mins} ${label}/day
+          </div>
+        `;
+        list.appendChild(item);
+      });
+
+      renderUserChart(dept, users);
+    }
+
+    function renderUserChart(dept, users) {
+      const canvasId = `user-chart-${dept}`;
+      const ctx = document.getElementById(canvasId).getContext('2d');
+
+      const labels = users.map(u => u.original.split(' ')[0]);
+      const data = users.map(u => showSavedTime ? u.chars / CHARS_PER_MINUTE_SAVED : u.chars / CHARS_PER_MINUTE_TYPED);
+      const color = showSavedTime ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+
+      if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
+        userCharts[dept].destroy();
+      }
+
+      userCharts[dept] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: showSavedTime ? 'Minutes Saved' : 'Minutes Wasted',
+            data,
+            backgroundColor: color,
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: c => `${c.formattedValue} min/day` } }
           },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false }, tooltip: { enabled: false } },
-            scales: { y: { display: false }, x: { display: false } }
+          scales: {
+            x: { beginAtZero: true, title: { display: true, text: 'Minutes per Day' } },
+            y: { grid: { display: false } }
           }
-        });
+        }
       });
     }
 
@@ -293,46 +350,44 @@
       const container = document.getElementById(`users-${dept}`);
       container.innerHTML = '';
       container.dataset.rendered = 'false';
-      renderUsers(dept);
+      renderUserSection(dept);
+    };
+
+    window.toggleTimeView = function(checked) {
+      showSavedTime = checked;
+      renderDepartments();
+      renderDeptChart();
+
+      document.querySelectorAll('.users-container.open').forEach(el => {
+        const dept = el.id.replace('users-', '');
+        el.innerHTML = '';
+        el.dataset.rendered = 'false';
+        renderUserSection(dept);
+      });
     };
 
     function renderDeptChart() {
       const ctx = document.getElementById('deptChart').getContext('2d');
       const sorted = Object.entries(departments)
-        .sort((a, b) => b[1].avgMins - a[1].avgMins);
+        .sort((a, b) => (showSavedTime ? b[1].avgMins : b[1].avgMinsTyped) - (showSavedTime ? a[1].avgMins : a[1].avgMinsTyped));
 
       const labels = sorted.map(([d]) => d);
-      const data = sorted.map(([, d]) => d.avgMins);
+      const data = sorted.map(([, d]) => showSavedTime ? d.avgMins : d.avgMinsTyped);
+      const color = showSavedTime ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)';
 
-      // FIXED: Safe destroy
       if (window.deptChart && typeof window.deptChart.destroy === 'function') {
         window.deptChart.destroy();
       }
 
       window.deptChart = new Chart(ctx, {
         type: 'bar',
-        data: {
-          labels, 
-          datasets: [{
-            label: 'Avg Minutes Saved / Day',
-            data,
-            backgroundColor: 'rgba(59, 130, 246, 0.8)',
-            borderRadius: 6,
-          }]
-        },
+        data: { labels, datasets: [{ label: '', data, backgroundColor: color, borderRadius: 6 }] },
         options: {
           indexAxis: 'y',
           responsive: true,
-          plugins: { 
-            legend: { display: false },
-            tooltip: { 
-              callbacks: { 
-                label: c => `${c.formattedValue} min/day` 
-              } 
-            }
-          },
+          plugins: { legend: { display: false } },
           scales: {
-            x: { beginAtZero: true, title: { display: true, text: 'Minutes Saved per Day' } },
+            x: { beginAtZero: true, title: { display: true, text: showSavedTime ? 'Minutes Saved per Day' : 'Minutes Wasted per Day' } },
             y: { grid: { display: false } }
           }
         }
