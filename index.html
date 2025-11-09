@@ -8,9 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-      --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --border: #e2e8f0;
-      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1); --accent: #6366f1;
+      --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; --card: #ffffff;
+      --text: #1e293b; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1); --accent: #6366f1;
     }
     * { box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1rem; }
@@ -72,13 +71,11 @@
     .user-name { font-weight: 600; color: var(--text); }
     .user-metric { font-weight: 700; font-size: 1rem; }
 
-    .user-chart-container {
-      background: white; padding: 1rem; border-radius: 12px;
-      box-shadow: var(--shadow); border: 1px solid var(--border);
-      margin-top: 1rem;
+    .chart-container {
+      background: white; padding: 1.5rem; border-radius: 12px;
+      box-shadow: var(--shadow); margin: 1.5rem 0; border: 1px solid var(--border);
     }
 
-    .chart-container { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow); margin: 2rem 0; border: 1px solid var(--border); }
     .loading, .error { text-align: center; padding: 2rem; border-radius: 12px; margin: 1rem 0; }
     .loading { color: #64748b; background: #f8fafc; }
     .error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
@@ -90,14 +87,14 @@
   <div class="container">
     <header>
       <h1>Productivity Dashboard</h1>
-      <p class="subtitle">Click a department → See all users in one chart</p>
+      <p class="subtitle">All time in HOURS • Click department to see user breakdown</p>
     </header>
 
     <div class="controls">
       <button onclick="loadData()">Refresh Data</button>
       <div class="view-toggle">
-        <input type="checkbox" id="showSavedTime" onchange="toggleTimeView(this.checked)">
-        <label for="showSavedTime">Show Time Saved (instead of Wasted)</label>
+        <input type="checkbox" id="showBoth" onchange="toggleBoth(this.checked)">
+        <label for="showBoth">Show Both Saved & Wasted Time</label>
       </div>
     </div>
 
@@ -111,23 +108,23 @@
     <div id="departments"></div>
 
     <div class="footer">
-      Auto-refreshes every 5 minutes • 1 min saved per 1,000 chars • Typing speed: 20 WPM
+      Auto-refreshes every 5 min • 1 hr saved per 60,000 chars • Typing: 20 WPM
     </div>
   </div>
 
   <script>
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
-    const CHARS_PER_MINUTE_SAVED = 1000;
+    const CHARS_PER_HOUR_SAVED = 60_000;  // 1 hr saved per 60,000 chars
     const TYPING_SPEED_WPM = 20;
     const CHARS_PER_WORD = 5;
-    const CHARS_PER_MINUTE_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD;
+    const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60; // 6,000
     const AUTO_REFRESH_MS = 5 * 60 * 1000;
 
     let rawData = [];
     let departments = {};
-    let userCharts = {}; // { dept: chartInstance }
+    let userCharts = {};
     let sortStates = {};
-    let showSavedTime = false;
+    let showBoth = false;
 
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
@@ -208,8 +205,8 @@
       Object.keys(departments).forEach(dept => {
         const avg = departments[dept].total / departments[dept].count;
         departments[dept].avgChars = avg;
-        departments[dept].avgMins = avg / CHARS_PER_MINUTE_SAVED;
-        departments[dept].avgMinsTyped = avg / CHARS_PER_MINUTE_TYPED;
+        departments[dept].savedHrs = avg / CHARS_PER_HOUR_SAVED;
+        departments[dept].wastedHrs = avg / CHARS_PER_HOUR_TYPED;
       });
     }
 
@@ -218,12 +215,12 @@
       container.innerHTML = '';
 
       const sorted = Object.entries(departments)
-        .sort((a, b) => (showSavedTime ? b[1].avgMins : b[1].avgMinsTyped) - (showSavedTime ? a[1].avgMins : a[1].avgMinsTyped));
+        .sort((a, b) => b[1].savedHrs - a[1].savedHrs);
 
       sorted.forEach(([dept, data]) => {
-        const mins = showSavedTime ? data.avgMins : data.avgMinsTyped;
-        const label = showSavedTime ? 'min saved' : 'min wasted';
-        const color = showSavedTime ? 'var(--success)' : 'var(--danger)';
+        const hrs = showBoth ? data.savedHrs : data.savedHrs;
+        const label = showBoth ? 'saved hrs' : 'saved hrs';
+        const color = 'var(--success)';
 
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
@@ -231,7 +228,7 @@
           <div class="dept-header" onclick="toggleUsers('${dept}')">
             <div>
               <div class="dept-name">${dept}</div>
-              <div class="dept-metric" style="color:${color}">~${mins.toFixed(1)} ${label}/day</div>
+              <div class="dept-metric" style="color:${color}">~${hrs.toFixed(1)} ${label}/day</div>
               <div class="dept-subtext">
                 ${data.count} user${data.count > 1 ? 's' : ''} • 
                 ${data.avgChars.toLocaleString('en', {maximumFractionDigits: 0})} chars avg
@@ -282,23 +279,24 @@
 
         <div class="user-list" id="user-list-${dept}"></div>
 
-        <div class="user-chart-container">
+        <div class="chart-container">
           <canvas id="user-chart-${dept}"></canvas>
         </div>
       `;
 
       const list = document.getElementById(`user-list-${dept}`);
       users.forEach(user => {
-        const mins = showSavedTime ? (user.chars / CHARS_PER_MINUTE_SAVED).toFixed(1) : (user.chars / CHARS_PER_MINUTE_TYPED).toFixed(1);
-        const label = showSavedTime ? 'min saved' : 'min wasted';
-        const color = showSavedTime ? 'var(--success)' : 'var(--danger)';
+        const savedHrs = user.chars / CHARS_PER_HOUR_SAVED;
+        const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
 
         const item = document.createElement('div');
         item.className = 'user-item';
         item.innerHTML = `
           <div class="user-name">${user.original}</div>
-          <div class="user-metric" style="color:${color}">
-            ${user.chars.toLocaleString()} chars • ~${mins} ${label}/day
+          <div class="user-metric">
+            ${user.chars.toLocaleString()} chars • 
+            <span style="color:var(--success)">${savedHrs.toFixed(1)} hrs saved</span>
+            ${showBoth ? ` • <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs wasted</span>` : ''}
           </div>
         `;
         list.appendChild(item);
@@ -312,8 +310,8 @@
       const ctx = document.getElementById(canvasId).getContext('2d');
 
       const labels = users.map(u => u.original.split(' ')[0]);
-      const data = users.map(u => showSavedTime ? u.chars / CHARS_PER_MINUTE_SAVED : u.chars / CHARS_PER_MINUTE_TYPED);
-      const color = showSavedTime ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+      const savedData = users.map(u => u.chars / CHARS_PER_HOUR_SAVED);
+      const wastedData = users.map(u => u.chars / CHARS_PER_HOUR_TYPED);
 
       if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
         userCharts[dept].destroy();
@@ -323,23 +321,31 @@
         type: 'bar',
         data: {
           labels,
-          datasets: [{
-            label: showSavedTime ? 'Minutes Saved' : 'Minutes Wasted',
-            data,
-            backgroundColor: color,
-            borderRadius: 6,
-          }]
+          datasets: [
+            {
+              label: 'Saved Hours',
+              data: savedData,
+              backgroundColor: 'rgba(16, 185, 129, 0.8)',
+              borderRadius: 6,
+            },
+            ...(showBoth ? [{
+              label: 'Wasted Hours',
+              data: wastedData,
+              backgroundColor: 'rgba(239, 68, 68, 0.8)',
+              borderRadius: 6,
+            }] : [])
+          ]
         },
         options: {
           indexAxis: 'y',
           responsive: true,
           plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: c => `${c.formattedValue} min/day` } }
+            legend: { position: 'top' },
+            tooltip: { callbacks: { label: c => `${c.formattedValue} hrs/day` } }
           },
           scales: {
-            x: { beginAtZero: true, title: { display: true, text: 'Minutes per Day' } },
-            y: { grid: { display: false } }
+            x: { stacked: showBoth, beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
+            y: { stacked: showBoth, grid: { display: false } }
           }
         }
       });
@@ -353,8 +359,8 @@
       renderUserSection(dept);
     };
 
-    window.toggleTimeView = function(checked) {
-      showSavedTime = checked;
+    window.toggleBoth = function(checked) {
+      showBoth = checked;
       renderDepartments();
       renderDeptChart();
 
@@ -369,11 +375,11 @@
     function renderDeptChart() {
       const ctx = document.getElementById('deptChart').getContext('2d');
       const sorted = Object.entries(departments)
-        .sort((a, b) => (showSavedTime ? b[1].avgMins : b[1].avgMinsTyped) - (showSavedTime ? a[1].avgMins : a[1].avgMinsTyped));
+        .sort((a, b) => b[1].savedHrs - a[1].savedHrs);
 
       const labels = sorted.map(([d]) => d);
-      const data = sorted.map(([, d]) => showSavedTime ? d.avgMins : d.avgMinsTyped);
-      const color = showSavedTime ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+      const savedData = sorted.map(([, d]) => d.savedHrs);
+      const wastedData = sorted.map(([, d]) => d.wastedHrs);
 
       if (window.deptChart && typeof window.deptChart.destroy === 'function') {
         window.deptChart.destroy();
@@ -381,14 +387,20 @@
 
       window.deptChart = new Chart(ctx, {
         type: 'bar',
-        data: { labels, datasets: [{ label: '', data, backgroundColor: color, borderRadius: 6 }] },
+        data: {
+          labels,
+          datasets: [
+            { label: 'Saved Hours', data: savedData, backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 6 },
+            ...(showBoth ? [{ label: 'Wasted Hours', data: wastedData, backgroundColor: 'rgba(239, 68, 68, 0.8)', borderRadius: 6 }] : [])
+          ]
+        },
         options: {
           indexAxis: 'y',
           responsive: true,
-          plugins: { legend: { display: false } },
+          plugins: { legend: { position: 'top' } },
           scales: {
-            x: { beginAtZero: true, title: { display: true, text: showSavedTime ? 'Minutes Saved per Day' : 'Minutes Wasted per Day' } },
-            y: { grid: { display: false } }
+            x: { stacked: showBoth, beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
+            y: { stacked: showBoth, grid: { display: false } }
           }
         }
       });
