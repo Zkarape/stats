@@ -96,7 +96,7 @@
   <script>
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
     const CHARS_PER_MINUTE_SAVED = 1000;
-    const AUTO_REFRESH_MS = 5 * 60 * 1000;
+    const AUTO_REFRESH_MS = 5 * 180 * 1000;
 
     let rawData = [];
     let departments = {};
@@ -304,12 +304,16 @@
       const labels = sorted.map(([d]) => d);
       const data = sorted.map(([, d]) => d.avgMins);
 
-      if (window.deptChart) window.deptChart.destroy();
+      // FIXED: Safe destroy
+      if (window.deptChart && typeof window.deptChart.destroy === 'function') {
+        window.deptChart.destroy();
+      }
 
       window.deptChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels, datasets: [{
+          labels, 
+          datasets: [{
             label: 'Avg Minutes Saved / Day',
             data,
             backgroundColor: 'rgba(59, 130, 246, 0.8)',
@@ -319,7 +323,14 @@
         options: {
           indexAxis: 'y',
           responsive: true,
-          plugins: { legend: { display: false } },
+          plugins: { 
+            legend: { display: false },
+            tooltip: { 
+              callbacks: { 
+                label: c => `${c.formattedValue} min/day` 
+              } 
+            }
+          },
           scales: {
             x: { beginAtZero: true, title: { display: true, text: 'Minutes Saved per Day' } },
             y: { grid: { display: false } }
