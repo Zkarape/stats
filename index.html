@@ -3,182 +3,258 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Productivity Dashboard</title>
+  <title>Department Productivity Dashboard</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
-      --primary: #2563eb;
+      --primary: #3b82f6;
       --success: #10b981;
-      --bg: #f9fafb;
+      --warning: #f59e0b;
+      --bg: #f8fafc;
       --card: #ffffff;
-      --text: #1f2937;
-      --border: #e5e7eb;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
       margin: 0;
       padding: 1rem;
+      line-height: 1.6;
     }
     .container {
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 0 auto;
     }
-    h1 {
+    header {
       text-align: center;
+      margin-bottom: 2rem;
+    }
+    h1 {
       color: var(--primary);
-      margin-bottom: 1.5rem;
+      font-size: 2rem;
+      margin: 0 0 0.5rem;
+    }
+    .subtitle {
+      color: #64748b;
+      font-size: 1rem;
     }
     .controls {
       display: flex;
       gap: 1rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
       flex-wrap: wrap;
       justify-content: center;
+      align-items: center;
     }
     select, button {
-      padding: 0.5rem 1rem;
+      padding: 0.65rem 1.2rem;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 1rem;
+      transition: all 0.2s;
     }
     select {
-      min-width: 200px;
+      min-width: 240px;
+      background: white;
     }
     button {
       background: var(--primary);
       color: white;
+      font-weight: 600;
       cursor: pointer;
+      box-shadow: var(--shadow);
     }
     button:hover {
-      background: #1d4ed8;
+      background: #2563eb;
+      transform: translateY(-1px);
     }
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
     }
     .card {
       background: var(--card);
-      border-radius: 8px;
-      padding: 1.2rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
       border: 1px solid var(--border);
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
     }
     .dept-name {
-      font-weight: 600;
-      font-size: 1.1rem;
+      font-weight: 700;
+      font-size: 1.2rem;
       color: var(--primary);
       margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-count {
+      font-size: 0.85rem;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
     }
     .metric {
-      font-size: 1.4rem;
-      font-weight: bold;
+      font-size: 1.8rem;
+      font-weight: 800;
       color: var(--success);
+      margin: 0.5rem 0;
     }
     .subtext {
-      font-size: 0.85rem;
-      color: #6b7280;
-      margin-top: 0.3rem;
+      font-size: 0.9rem;
+      color: #64748b;
     }
-    .loading {
+    .chart-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+      border: 1px solid var(--border);
+    }
+    .loading, .error {
       text-align: center;
       padding: 2rem;
-      color: #6b7280;
+      border-radius: 12px;
+      margin: 1rem 0;
+    }
+    .loading {
+      color: #64748b;
+      background: #f8fafc;
     }
     .error {
       background: #fee2e2;
       color: #991b1b;
-      padding: 1rem;
-      border-radius: 6px;
+      border: 1px solid #fecaca;
+    }
+    .footer {
       text-align: center;
-      margin: 1rem 0;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-top: 3rem;
+    }
+    @media (max-width: 640px) {
+      .controls { flex-direction: column; }
+      select, button { width: 100%; }
     }
   </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <h1>Department Productivity Dashboard</h1>
+    <header>
+      <h1>Department Productivity Dashboard</h1>
+      <p class="subtitle">Daily average characters typed → estimated time saved</p>
+    </header>
+
     <div class="controls">
       <select id="userSelect">
-        <option value="">-- Select User --</option>
+        <option value="">-- Select User to View Details --</option>
       </select>
       <button onclick="loadData()">Refresh Data</button>
     </div>
-    <div id="loading" class="loading">Loading data...</div>
+
+    <div id="loading" class="loading">Loading productivity data...</div>
     <div id="error" class="error" style="display:none;"></div>
+
+    <div id="chartContainer" class="chart-container" style="display:none;">
+      <canvas id="productivityChart"></canvas>
+    </div>
+
     <div id="dashboard" class="stats-grid" style="display:none;"></div>
+
+    <div class="footer">
+      Updated every 5 minutes • 1 min saved per 1,000 characters typed
+    </div>
   </div>
 
   <script>
     // === CONFIGURATION ===
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
-    const HOST_TO_DEPT = {
-      'x-ray03': 'X-Ray',
-      'x-ray04': 'X-Ray',
-      'cardiobit03': 'Cardiology',
-      'mrtdoc11': 'MRT',
-      'mrt-doc09': 'MRT',
-      'mrtdoc02': 'MRT',
-      'emergp11': 'Emergency',
-      'emergp09': 'Emergency',
-      'emergp03': 'Emergency',
-      'orthopedy09': 'Orthopedics',
-      'orthopedy14': 'Orthopedics',
-      'matlux01': 'Maternity',
-      'maternity08': 'Maternity',
-      'maternity06': 'Maternity',
-      'maternity07': 'Maternity',
-      'vascular02': 'Vascular',
-      'reanim1-4': 'Reanimation',
-      'urology12': 'Urology',
-      'lor18': 'LOR',
-    };
     const CHARS_PER_MINUTE_SAVED = 1000;
+    const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
 
     let rawData = [];
     let departments = {};
+    let chart = null;
 
-    // Fetch and parse data
+    // Extract department from hostname (e.g., "x-ray03" → "X-Ray")
+    function extractDepartment(hostname) {
+      const lower = hostname.toLowerCase();
+      const patterns = [
+        { regex: /^(x-?ray)/i, name: 'X-Ray' },
+        { regex: /^(cardio)/i, name: 'Cardiology' },
+        { regex: /^(mrt|mrt-?doc)/i, name: 'MRT' },
+        { regex: /^(emerg|emergp)/i, name: 'Emergency' },
+        { regex: /^(ortho|orthopedy)/i, name: 'Orthopedics' },
+        { regex: /^(mat|matlux|maternity)/i, name: 'Maternity' },
+        { regex: /^(vascular)/i, name: 'Vascular' },
+        { regex: /^(reanim)/i, name: 'Reanimation' },
+        { regex: /^(urology)/i, name: 'Urology' },
+        { regex: /^(lor)/i, name: 'LOR' },
+      ];
+      for (const p of patterns) {
+        if (p.regex.test(lower)) return p.name;
+      }
+      // Fallback: capitalize first part
+      return hostname.split(/[\d-]/)[0].replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    // Fetch and parse
     async function loadData() {
       const loading = document.getElementById('loading');
       const error = document.getElementById('error');
       const dashboard = document.getElementById('dashboard');
+      const chartContainer = document.getElementById('chartContainer');
       const userSelect = document.getElementById('userSelect');
 
+      // UI reset
       loading.style.display = 'block';
       error.style.display = 'none';
       dashboard.style.display = 'none';
-      userSelect.innerHTML = '<option value="">-- Select User --</option>';
+      chartContainer.style.display = 'none';
+      userSelect.innerHTML = '<option value="">-- Select User to View Details --</option>';
 
       try {
         const response = await fetch(DATA_URL + '?t=' + Date.now());
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
         const text = await response.text();
+
         rawData = text.trim().split('\n')
           .map(line => line.trim())
           .filter(line => line.includes('|'))
           .map(line => {
             const [hostPart, avgPart] = line.split('|').map(s => s.trim());
             const hostname = hostPart.split(' ')[0].toLowerCase();
-
-            // FIXED: Safe parsing with null check
             const match = avgPart.match(/([\d,]+\.?\d*)/);
-            if (!match) return null; // skip invalid lines
+            if (!match) return null;
             const chars = parseFloat(match[1].replace(/,/g, ''));
-
             return { hostname, chars, original: hostPart };
           })
-          .filter(item => item !== null); // remove invalid
+          .filter(Boolean);
 
         processData();
         renderDashboard();
+        renderChart();
         populateUserDropdown();
 
         loading.style.display = 'none';
         dashboard.style.display = 'grid';
+        chartContainer.style.display = 'block';
 
       } catch (err) {
         loading.style.display = 'none';
@@ -191,7 +267,7 @@
     function processData() {
       departments = {};
       rawData.forEach(item => {
-        const dept = HOST_TO_DEPT[item.hostname] || 'Unknown';
+        const dept = extractDepartment(item.hostname);
         if (!departments[dept]) {
           departments[dept] = { total: 0, count: 0, users: [] };
         }
@@ -208,6 +284,74 @@
       });
     }
 
+    function renderDashboard() {
+      const dashboard = document.getElementById('dashboard');
+      dashboard.innerHTML = '';
+
+      const sorted = Object.entries(departments)
+        .sort((a, b) => b[1].minsSaved - a[1].minsSaved);
+
+      sorted.forEach(([dept, data]) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="dept-name">
+            ${dept}
+            <span class="user-count">${data.count} user${data.count > 1 ? 's' : ''}</span>
+          </div>
+          <div class="metric">~${data.minsSaved.toFixed(1)} min/day</div>
+          <div class="subtext">Avg: ${data.avgChars.toLocaleString('en-US', {maximumFractionDigits: 0})} chars</div>
+        `;
+        dashboard.appendChild(card);
+      });
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById('productivityChart').getContext('2d');
+      const sorted = Object.entries(departments)
+        .sort((a, b) => b[1].minsSaved - a[1].minsSaved);
+
+      const labels = sorted.map(([dept]) => dept);
+      const data = sorted.map(([, d]) => d.minsSaved);
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Minutes Saved per Day',
+            data: data,
+            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+            borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 1,
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.formattedValue} min/day`
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              title: { display: true, text: 'Minutes Saved per Day' }
+            },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
     function populateUserDropdown() {
       const userSelect = document.getElementById('userSelect');
       rawData.forEach(item => {
@@ -218,26 +362,7 @@
       });
     }
 
-    function renderDashboard() {
-      const dashboard = document.getElementById('dashboard');
-      dashboard.innerHTML = '';
-
-      const sortedDepts = Object.entries(departments)
-        .sort((a, b) => b[1].minsSaved - a[1].minsSaved);
-
-      sortedDepts.forEach(([dept, data]) => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="dept-name">${dept} <small>(${data.count} users)</small></div>
-          <div class="metric">~${data.minsSaved.toFixed(1)} min/day</div>
-          <div class="subtext">Avg per user: ${data.avgChars.toLocaleString('en-US', {maximumFractionDigits: 0})} chars</div>
-        `;
-        dashboard.appendChild(card);
-      });
-    }
-
-    // === EVENT LISTENER: Only attach ONCE ===
+    // User detail popup
     document.getElementById('userSelect').addEventListener('change', function() {
       const selected = this.value;
       if (!selected) return;
@@ -245,16 +370,25 @@
       const user = rawData.find(u => u.hostname === selected);
       if (!user) return;
 
-      const dept = HOST_TO_DEPT[selected] || 'Unknown';
+      const dept = extractDepartment(selected);
       const mins = (user.chars / CHARS_PER_MINUTE_SAVED).toFixed(1);
 
-      alert(`${user.original}\nDepartment: ${dept}\nDaily Avg: ${user.chars.toLocaleString()} chars\n~${mins} mins saved/day`);
+      alert(
+        `${user.original}\n` +
+        `Department: ${dept}\n` +
+        `Daily Avg: ${user.chars.toLocaleString()} chars\n` +
+        `~${mins} minutes saved per day`
+      );
     });
 
-    // Load on start
-    window.onload = () => {
+    // Auto-refresh
+    setInterval(() => {
+      console.log('Auto-refreshing data...');
       loadData();
-    };
+    }, AUTO_REFRESH_MS);
+
+    // Initial load
+    window.onload = () => loadData();
   </script>
 </body>
 </html>
