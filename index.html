@@ -87,14 +87,14 @@
   <div class="container">
     <header>
       <h1>Productivity Dashboard</h1>
-      <p class="subtitle">All time in HOURS • Click department to see user breakdown</p>
+      <p class="subtitle">All time in HOURS • Green = Saved • Red = Wasted (stacked)</p>
     </header>
 
     <div class="controls">
       <button onclick="loadData()">Refresh Data</button>
       <div class="view-toggle">
         <input type="checkbox" id="showBoth" onchange="toggleBoth(this.checked)">
-        <label for="showBoth">Show Both Saved & Wasted Time</label>
+        <label for="showBoth">Show Wasted Time (stacked on Saved)</label>
       </div>
     </div>
 
@@ -114,7 +114,7 @@
 
   <script>
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
-    const CHARS_PER_HOUR_SAVED = 60_000;  // 1 hr saved per 60,000 chars
+    const CHARS_PER_HOUR_SAVED = 60_000;
     const TYPING_SPEED_WPM = 20;
     const CHARS_PER_WORD = 5;
     const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60; // 6,000
@@ -218,9 +218,9 @@
         .sort((a, b) => b[1].savedHrs - a[1].savedHrs);
 
       sorted.forEach(([dept, data]) => {
-        const hrs = showBoth ? data.savedHrs : data.savedHrs;
-        const label = showBoth ? 'saved hrs' : 'saved hrs';
-        const color = 'var(--success)';
+        const hrs = showBoth ? data.savedHrs + data.wastedHrs : data.savedHrs;
+        const label = showBoth ? 'total hrs' : 'saved hrs';
+        const color = showBoth ? 'var(--text)' : 'var(--success)';
 
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
@@ -325,14 +325,16 @@
             {
               label: 'Saved Hours',
               data: savedData,
-              backgroundColor: 'rgba(16, 185, 129, 0.8)',
-              borderRadius: 6,
+              backgroundColor: 'rgba(16, 185, 129, 0.9)',
+              borderColor: 'rgba(16, 185, 129, 1)',
+              borderWidth: 1,
             },
             ...(showBoth ? [{
               label: 'Wasted Hours',
               data: wastedData,
-              backgroundColor: 'rgba(239, 68, 68, 0.8)',
-              borderRadius: 6,
+              backgroundColor: 'rgba(239, 68, 68, 0.9)',
+              borderColor: 'rgba(239, 68, 68, 1)',
+              borderWidth: 1,
             }] : [])
           ]
         },
@@ -341,11 +343,18 @@
           responsive: true,
           plugins: {
             legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => `${c.formattedValue} hrs/day` } }
+            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} hrs/day` } }
           },
           scales: {
-            x: { stacked: showBoth, beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
-            y: { stacked: showBoth, grid: { display: false } }
+            x: {
+              stacked: true,
+              beginAtZero: true,
+              title: { display: true, text: 'Hours per Day' }
+            },
+            y: {
+              stacked: true,
+              grid: { display: false }
+            }
           }
         }
       });
@@ -390,8 +399,8 @@
         data: {
           labels,
           datasets: [
-            { label: 'Saved Hours', data: savedData, backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 6 },
-            ...(showBoth ? [{ label: 'Wasted Hours', data: wastedData, backgroundColor: 'rgba(239, 68, 68, 0.8)', borderRadius: 6 }] : [])
+            { label: 'Saved Hours', data: savedData, backgroundColor: 'rgba(16, 185, 129, 0.9)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: 1 },
+            ...(showBoth ? [{ label: 'Wasted Hours', data: wastedData, backgroundColor: 'rgba(239, 68, 68, 0.9)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }] : [])
           ]
         },
         options: {
@@ -399,8 +408,8 @@
           responsive: true,
           plugins: { legend: { position: 'top' } },
           scales: {
-            x: { stacked: showBoth, beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
-            y: { stacked: showBoth, grid: { display: false } }
+            x: { stacked: true, beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
+            y: { stacked: true, grid: { display: false } }
           }
         }
       });
