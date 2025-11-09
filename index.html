@@ -100,26 +100,20 @@
 <body>
   <div class="container">
     <h1>Department Productivity Dashboard</h1>
-
     <div class="controls">
       <select id="userSelect">
         <option value="">-- Select User --</option>
       </select>
       <button onclick="loadData()">Refresh Data</button>
     </div>
-
     <div id="loading" class="loading">Loading data...</div>
     <div id="error" class="error" style="display:none;"></div>
-
     <div id="dashboard" class="stats-grid" style="display:none;"></div>
   </div>
 
   <script>
     // === CONFIGURATION ===
-    // CHANGE THIS URL to your S3 public link or Lambda API Gateway URL
-    const DATA_URL = "https://your-bucket.s3.amazonaws.com/productivity.txt";
-
-    // Map hostnames (lowercase) to departments
+    const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
     const HOST_TO_DEPT = {
       'x-ray03': 'X-Ray',
       'x-ray04': 'X-Ray',
@@ -140,10 +134,7 @@
       'reanim1-4': 'Reanimation',
       'urology12': 'Urology',
       'lor18': 'LOR',
-      // Add more as needed
     };
-
-    // Productivity: 1 minute saved per 1000 characters typed (adjustable)
     const CHARS_PER_MINUTE_SAVED = 1000;
 
     let rawData = [];
@@ -162,20 +153,25 @@
       userSelect.innerHTML = '<option value="">-- Select User --</option>';
 
       try {
-        const response = await fetch(DATA_URL + '?t=' + Date.now()); // cache bust
+        const response = await fetch(DATA_URL + '?t=' + Date.now());
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const text = await response.text();
 
-        // Parse lines
+        const text = await response.text();
         rawData = text.trim().split('\n')
           .map(line => line.trim())
           .filter(line => line.includes('|'))
           .map(line => {
             const [hostPart, avgPart] = line.split('|').map(s => s.trim());
             const hostname = hostPart.split(' ')[0].toLowerCase();
-            const chars = parseFloat(avgPart.match(/([\d,]+\.?\d*)/)[1].replace(/,/g, ''));
+
+            // FIXED: Safe parsing with null check
+            const match = avgPart.match(/([\d,]+\.?\d*)/);
+            if (!match) return null; // skip invalid lines
+            const chars = parseFloat(match[1].replace(/,/g, ''));
+
             return { hostname, chars, original: hostPart };
-          });
+          })
+          .filter(item => item !== null); // remove invalid
 
         processData();
         renderDashboard();
@@ -188,12 +184,12 @@
         loading.style.display = 'none';
         error.style.display = 'block';
         error.textContent = `Failed to load data: ${err.message}`;
+        console.error(err);
       }
     }
 
     function processData() {
       departments = {};
-
       rawData.forEach(item => {
         const dept = HOST_TO_DEPT[item.hostname] || 'Unknown';
         if (!departments[dept]) {
@@ -204,7 +200,6 @@
         departments[dept].users.push(item);
       });
 
-      // Calculate averages
       Object.keys(departments).forEach(dept => {
         const avgChars = departments[dept].total / departments[dept].count;
         const minsSaved = avgChars / CHARS_PER_MINUTE_SAVED;
@@ -221,22 +216,14 @@
         opt.textContent = item.original;
         userSelect.appendChild(opt);
       });
-
-      userSelect.addEventListener('change', () => {
-        const selected = userSelect.value;
-        if (selected) {
-          const user = rawData.find(u => u.hostname === selected);
-          const dept = HOST_TO_DEPT[selected] || 'Unknown';
-          alert(`${user.original}\nDepartment: ${dept}\nDaily Avg: ${user.chars.toLocaleString()} chars\n~${(user.chars / CHARS_PER_MINUTE_SAVED).toFixed(1)} mins saved/day`);
-        }
-      });
     }
 
     function renderDashboard() {
       const dashboard = document.getElementById('dashboard');
       dashboard.innerHTML = '';
 
-      const sortedDepts = Object.entries(departments).sort((a, b) => b[1].minsSaved - a[1].minsSaved);
+      const sortedDepts = Object.entries(departments)
+        .sort((a, b) => b[1].minsSaved - a[1].minsSaved);
 
       sortedDepts.forEach(([dept, data]) => {
         const card = document.createElement('div');
@@ -244,14 +231,30 @@
         card.innerHTML = `
           <div class="dept-name">${dept} <small>(${data.count} users)</small></div>
           <div class="metric">~${data.minsSaved.toFixed(1)} min/day</div>
-          <div class="subtext">Avg per user: ${data.avgChars.toLocaleString(undefined, {maximumFractionDigits: 0})} chars</div>
+          <div class="subtext">Avg per user: ${data.avgChars.toLocaleString('en-US', {maximumFractionDigits: 0})} chars</div>
         `;
         dashboard.appendChild(card);
       });
     }
 
+    // === EVENT LISTENER: Only attach ONCE ===
+    document.getElementById('userSelect').addEventListener('change', function() {
+      const selected = this.value;
+      if (!selected) return;
+
+      const user = rawData.find(u => u.hostname === selected);
+      if (!user) return;
+
+      const dept = HOST_TO_DEPT[selected] || 'Unknown';
+      const mins = (user.chars / CHARS_PER_MINUTE_SAVED).toFixed(1);
+
+      alert(`${user.original}\nDepartment: ${dept}\nDaily Avg: ${user.chars.toLocaleString()} chars\n~${mins} mins saved/day`);
+    });
+
     // Load on start
-    window.onload = loadData;
+    window.onload = () => {
+      loadData();
+    };
   </script>
 </body>
 </html>
