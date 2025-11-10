@@ -50,7 +50,7 @@
     .dept-metric {
       font-size: 1.6rem; font-weight: 800; margin: 0.5rem 0;
     }
-    }dept-subtext { font-size: 0.9rem; color: #64748b; }
+    .dept-subtext { font-size: 0.9rem; color: #64748b; }
 
     .sort-controls {
       display: flex; gap: 0.5rem; margin: 1rem 0; font-size: 0.85rem;
@@ -87,14 +87,14 @@
   <div class="container">
     <header>
       <h1>Productivity Dashboard</h1>
-      <p class="subtitle">All time in HOURS • Red = Wasted, Green = Saved (2 bars per user)</p>
+      <p class="subtitle">All time in HOURS • Green = Saved • Red = Wasted (stacked)</p>
     </header>
 
     <div class="controls">
       <button onclick="loadData()">Refresh Data</button>
       <div class="view-toggle">
         <input type="checkbox" id="showBoth" onchange="toggleBoth(this.checked)">
-        <label for="showBoth">Show Wasted Time (Red bar above Green)</label>
+        <label for="showBoth">Show Wasted Time (stacked on Saved)</label>
       </div>
     </div>
 
@@ -129,7 +129,7 @@
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
       const map = {
-        'x-ray': 'X-Ray', 'xray': "X-Ray",
+        'x-ray': 'X-Ray', 'xray': 'X-Ray',
         'cardio': 'Cardiology',
         'mrt': 'MRT', 'mrtdoc': 'MRT',
         'emerg': 'Emergency', 'emergp': 'Emergency',
@@ -309,19 +309,9 @@
       const canvasId = `user-chart-${dept}`;
       const ctx = document.getElementById(canvasId).getContext('2d');
 
-      // Create grouped labels: User + (Wasted, Saved)
-      const labels = [];
-      users.forEach(u => {
-        labels.push(`${u.original.split(' ')[0]} (Wasted)`);
-        labels.push(`${u.original.split(' ')[0]} (Saved)`);
-      });
-
-      const savedData = [];
-      const wastedData = [];
-      users.forEach(u => {
-        wastedData.push(showBoth ? u.chars / CHARS_PER_HOUR_TYPED : 0);
-        savedData.push(u.chars / CHARS_PER_HOUR_SAVED);
-      });
+      const labels = users.map(u => u.original.split(' ')[0]);
+      const savedData = users.map(u => u.chars / CHARS_PER_HOUR_SAVED);
+      const wastedData = users.map(u => u.chars / CHARS_PER_HOUR_TYPED);
 
       if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
         userCharts[dept].destroy();
@@ -333,21 +323,19 @@
           labels,
           datasets: [
             {
-              label: 'Wasted Hours',
-              data: wastedData,
-              backgroundColor: 'rgba(239, 68, 68, 0.9)',
-              borderColor: 'rgba(239, 68, 68, 1)',
-              borderWidth: 1,
-              barThickness: 20,
-            },
-            {
               label: 'Saved Hours',
               data: savedData,
               backgroundColor: 'rgba(16, 185, 129, 0.9)',
               borderColor: 'rgba(16, 185, 129, 1)',
               borderWidth: 1,
-              barThickness: 20,
-            }
+            },
+            ...(showBoth ? [{
+              label: 'Wasted Hours',
+              data: wastedData,
+              backgroundColor: 'rgba(239, 68, 68, 0.9)',
+              borderColor: 'rgba(239, 68, 68, 1)',
+              borderWidth: 1,
+            }] : [])
           ]
         },
         options: {
@@ -359,22 +347,13 @@
           },
           scales: {
             x: {
+              stacked: true,
               beginAtZero: true,
               title: { display: true, text: 'Hours per Day' }
             },
             y: {
-              grid: { display: false },
-              ticks: {
-                callback: function(value, index) {
-                  return index % 2 === 0 ? value.split(' (')[0] : '';
-                }
-              }
-            }
-          },
-          datasets: {
-            bar: {
-              categoryPercentage: 0.8,
-              barPercentage: 0.9
+              stacked: true,
+              grid: { display: false }
             }
           }
         }
@@ -420,8 +399,8 @@
         data: {
           labels,
           datasets: [
-            { label: 'Saved Hours', data: savedData, backgroundColor: 'rgba(16, 185, 129, 0.9)', borderWidth: 1 },
-            ...(showBoth ? [{ label: 'Wasted Hours', data: wastedData, backgroundColor: 'rgba(239, 68, 68, 0.9)', borderWidth: 1 }] : [])
+            { label: 'Saved Hours', data: savedData, backgroundColor: 'rgba(16, 185, 129, 0.9)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: 1 },
+            ...(showBoth ? [{ label: 'Wasted Hours', data: wastedData, backgroundColor: 'rgba(239, 68, 68, 0.9)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }] : [])
           ]
         },
         options: {
@@ -429,8 +408,8 @@
           responsive: true,
           plugins: { legend: { position: 'top' } },
           scales: {
-            x: { stacked: showBoth, beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
-            y: { stacked: showBoth, grid: { display: false } }
+            x: { stacked: true, beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
+            y: { stacked: true, grid: { display: false } }
           }
         }
       });
