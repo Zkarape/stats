@@ -98,7 +98,7 @@
       </div>
     </div>
 
-    <div id="loading" class="loading">Loading data...</div>
+    <div id="loading" class="loading">Click "Refresh Data" to load...</div>
     <div id="error" class="error" style="display:none;"></div>
 
     <div id="chartContainer" class="chart-container" style="display:none;">
@@ -108,7 +108,7 @@
     <div id="departments"></div>
 
     <div class="footer">
-      Auto-refreshes every 5 min • 1 hr saved per 60,000 chars • Typing: 20 WPM
+      Manual refresh only • 1 hr saved per 60,000 chars • Typing: 20 WPM
     </div>
   </div>
 
@@ -118,7 +118,6 @@
     const TYPING_SPEED_WPM = 20;
     const CHARS_PER_WORD = 5;
     const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60; // 6,000
-    const AUTO_REFRESH_MS = 5 * 60 * 1000;
 
     let rawData = [];
     let departments = {};
@@ -153,6 +152,7 @@
       const chartContainer = document.getElementById('chartContainer');
 
       loading.style.display = 'block';
+      loading.textContent = 'Loading data...';
       error.style.display = 'none';
       deptsDiv.innerHTML = '';
       chartContainer.style.display = 'none';
@@ -203,10 +203,9 @@
       });
 
       Object.keys(departments).forEach(dept => {
-        const avg = departments[dept].total / departments[dept].count;
-        departments[dept].avgChars = avg;
-        departments[dept].savedHrs = avg / CHARS_PER_HOUR_SAVED;
-        departments[dept].wastedHrs = avg / CHARS_PER_HOUR_TYPED;
+        const totalChars = departments[dept].total;
+        departments[dept].totalSavedHrs = totalChars / CHARS_PER_HOUR_SAVED;
+        departments[dept].totalWastedHrs = totalChars / CHARS_PER_HOUR_TYPED;
       });
     }
 
@@ -215,10 +214,10 @@
       container.innerHTML = '';
 
       const sorted = Object.entries(departments)
-        .sort((a, b) => b[1].savedHrs - a[1].savedHrs);
+        .sort((a, b) => b[1].totalSavedHrs - a[1].totalSavedHrs);
 
       sorted.forEach(([dept, data]) => {
-        const hrs = showBoth ? data.savedHrs + data.wastedHrs : data.savedHrs;
+        const hrs = showBoth ? data.totalSavedHrs + data.totalWastedHrs : data.totalSavedHrs;
         const label = showBoth ? 'total hrs' : 'saved hrs';
         const color = showBoth ? 'var(--text)' : 'var(--success)';
 
@@ -231,10 +230,10 @@
               <div class="dept-metric" style="color:${color}">~${hrs.toFixed(1)} ${label}/day</div>
               <div class="dept-subtext">
                 ${data.count} user${data.count > 1 ? 's' : ''} • 
-                ${data.avgChars.toLocaleString('en', {maximumFractionDigits: 0})} chars avg
+                ${data.total.toLocaleString('en', {maximumFractionDigits: 0})} chars total
               </div>
             </div>
-            <div class="dept-toggle">Down Arrow</div>
+            <div class="dept-toggle">▼</div>
           </div>
           <div id="users-${dept}" class="users-container"></div>
         `;
@@ -246,7 +245,7 @@
       const container = document.getElementById(`users-${dept}`);
       const isOpen = container.classList.toggle('open');
       const toggle = container.parentElement.querySelector('.dept-toggle');
-      toggle.textContent = isOpen ? 'Up Arrow' : 'Down Arrow';
+      toggle.textContent = isOpen ? '▲' : '▼';
 
       if (isOpen && !container.dataset.rendered) {
         renderUserSection(dept);
@@ -384,11 +383,11 @@
     function renderDeptChart() {
       const ctx = document.getElementById('deptChart').getContext('2d');
       const sorted = Object.entries(departments)
-        .sort((a, b) => b[1].savedHrs - a[1].savedHrs);
+        .sort((a, b) => b[1].totalSavedHrs - a[1].totalSavedHrs);
 
       const labels = sorted.map(([d]) => d);
-      const savedData = sorted.map(([, d]) => d.savedHrs);
-      const wastedData = sorted.map(([, d]) => d.wastedHrs);
+      const savedData = sorted.map(([, d]) => d.totalSavedHrs);
+      const wastedData = sorted.map(([, d]) => d.totalWastedHrs);
 
       if (window.deptChart && typeof window.deptChart.destroy === 'function') {
         window.deptChart.destroy();
@@ -414,9 +413,6 @@
         }
       });
     }
-
-    setInterval(() => { console.log('Auto-refreshing...'); loadData(); }, AUTO_REFRESH_MS);
-    window.onload = loadData;
   </script>
 </body>
 </html>
