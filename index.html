@@ -87,15 +87,11 @@
   <div class="container">
     <header>
       <h1>Productivity Dashboard</h1>
-      <p class="subtitle">All time in HOURS • Green = Saved • Red = Wasted (stacked)</p>
+      <p class="subtitle">All time in HOURS • Red = Wasted Time at 20 WPM</p>
     </header>
 
     <div class="controls">
       <button onclick="loadData()">Refresh Data</button>
-      <div class="view-toggle">
-        <input type="checkbox" id="showBoth" onchange="toggleBoth(this.checked)">
-        <label for="showBoth">Show Wasted Time (stacked on Saved)</label>
-      </div>
     </div>
 
     <div id="loading" class="loading">Click "Refresh Data" to load...</div>
@@ -214,20 +210,16 @@
       container.innerHTML = '';
 
       const sorted = Object.entries(departments)
-        .sort((a, b) => b[1].totalSavedHrs - a[1].totalSavedHrs);
+        .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
 
       sorted.forEach(([dept, data]) => {
-        const hrs = showBoth ? data.totalSavedHrs + data.totalWastedHrs : data.totalSavedHrs;
-        const label = showBoth ? 'total hrs' : 'saved hrs';
-        const color = showBoth ? 'var(--text)' : 'var(--success)';
-
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
         deptCard.innerHTML = `
           <div class="dept-header" onclick="toggleUsers('${dept}')">
             <div>
               <div class="dept-name">${dept}</div>
-              <div class="dept-metric" style="color:${color}">~${hrs.toFixed(1)} ${label}/day</div>
+              <div class="dept-metric" style="color:var(--danger)">~${data.totalWastedHrs.toFixed(1)} wasted hrs/day</div>
               <div class="dept-subtext">
                 ${data.count} user${data.count > 1 ? 's' : ''} • 
                 ${data.total.toLocaleString('en', {maximumFractionDigits: 0})} chars total
@@ -285,7 +277,6 @@
 
       const list = document.getElementById(`user-list-${dept}`);
       users.forEach(user => {
-        const savedHrs = user.chars / CHARS_PER_HOUR_SAVED;
         const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
 
         const item = document.createElement('div');
@@ -294,8 +285,7 @@
           <div class="user-name">${user.original}</div>
           <div class="user-metric">
             ${user.chars.toLocaleString()} chars • 
-            <span style="color:var(--success)">${savedHrs.toFixed(1)} hrs saved</span>
-            ${showBoth ? ` • <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs wasted</span>` : ''}
+            <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs wasted</span>
           </div>
         `;
         list.appendChild(item);
@@ -309,7 +299,6 @@
       const ctx = document.getElementById(canvasId).getContext('2d');
 
       const labels = users.map(u => u.original.split(' ')[0]);
-      const savedData = users.map(u => u.chars / CHARS_PER_HOUR_SAVED);
       const wastedData = users.map(u => u.chars / CHARS_PER_HOUR_TYPED);
 
       if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
@@ -322,19 +311,12 @@
           labels,
           datasets: [
             {
-              label: 'Saved Hours',
-              data: savedData,
-              backgroundColor: 'rgba(16, 185, 129, 0.9)',
-              borderColor: 'rgba(16, 185, 129, 1)',
-              borderWidth: 1,
-            },
-            ...(showBoth ? [{
               label: 'Wasted Hours',
               data: wastedData,
               backgroundColor: 'rgba(239, 68, 68, 0.9)',
               borderColor: 'rgba(239, 68, 68, 1)',
               borderWidth: 1,
-            }] : [])
+            }
           ]
         },
         options: {
@@ -346,12 +328,10 @@
           },
           scales: {
             x: {
-              stacked: true,
               beginAtZero: true,
               title: { display: true, text: 'Hours per Day' }
             },
             y: {
-              stacked: true,
               grid: { display: false }
             }
           }
@@ -367,26 +347,12 @@
       renderUserSection(dept);
     };
 
-    window.toggleBoth = function(checked) {
-      showBoth = checked;
-      renderDepartments();
-      renderDeptChart();
-
-      document.querySelectorAll('.users-container.open').forEach(el => {
-        const dept = el.id.replace('users-', '');
-        el.innerHTML = '';
-        el.dataset.rendered = 'false';
-        renderUserSection(dept);
-      });
-    };
-
     function renderDeptChart() {
       const ctx = document.getElementById('deptChart').getContext('2d');
       const sorted = Object.entries(departments)
-        .sort((a, b) => b[1].totalSavedHrs - a[1].totalSavedHrs);
+        .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
 
       const labels = sorted.map(([d]) => d);
-      const savedData = sorted.map(([, d]) => d.totalSavedHrs);
       const wastedData = sorted.map(([, d]) => d.totalWastedHrs);
 
       if (window.deptChart && typeof window.deptChart.destroy === 'function') {
@@ -398,8 +364,7 @@
         data: {
           labels,
           datasets: [
-            { label: 'Saved Hours', data: savedData, backgroundColor: 'rgba(16, 185, 129, 0.9)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: 1 },
-            ...(showBoth ? [{ label: 'Wasted Hours', data: wastedData, backgroundColor: 'rgba(239, 68, 68, 0.9)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }] : [])
+            { label: 'Wasted Hours', data: wastedData, backgroundColor: 'rgba(239, 68, 68, 0.9)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }
           ]
         },
         options: {
@@ -407,8 +372,8 @@
           responsive: true,
           plugins: { legend: { position: 'top' } },
           scales: {
-            x: { stacked: true, beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
-            y: { stacked: true, grid: { display: false } }
+            x: { beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
+            y: { grid: { display: false } }
           }
         }
       });
