@@ -524,7 +524,7 @@
 
     function getFilteredDepartments() {
       return Object.entries(departments)
-        .filter(([_, data]) => data.avgWastedHrsPerDoc >= currentMinHrs)
+        .filter(([_, data]) => data.avgWastedHrsPerDoc > currentMinHrs)
         .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
     }
 
@@ -864,3 +864,4 @@
 </body>
 
 </html>
+
