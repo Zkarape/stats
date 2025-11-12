@@ -343,25 +343,26 @@
       <button id="dictationToggle" onclick="toggleDictation()" style="display:none;">Show Dictation Data</button>
     </div>
 
-<div id="filterPanel" class="calculator-panel" style="display:none; margin-top:1.5rem;">
-  <div class="calculator-title">Department Filter by Avg Wasted Hrs/Doctor</div>
-  <div class="calculator-row" style="align-items:center; gap:1.5rem; flex-wrap:wrap;">
-    <div style="flex:1; min-width:200px;">
-      <label style="font-weight:600; display:block; margin-bottom:0.5rem;">
-        Show departments where average wasted time per doctor is ≥
-      </label>
-      <input type="number" step="0.1" min="0" value="0" placeholder="0" id="minHrsFilter" style="width:100%; max-width:120px; font-size:1.1rem; padding:0.6rem;">
-    </div>
-    <div style="display:flex; gap:2rem; font-size:1.1rem; font-weight:600; color:var(--text);">
-      <div>
-        <strong id="totalUsers">0</strong> total doctors
+    <div id="filterPanel" class="calculator-panel" style="display:none; margin-top:1.5rem;">
+      <div class="calculator-title">Department Filter by Avg Wasted Hrs/Doctor</div>
+      <div class="calculator-row" style="align-items:center; gap:1.5rem; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
+          <label style="font-weight:600; display:block; margin-bottom:0.5rem;">
+            Show departments where average wasted time per doctor is ≥
+          </label>
+          <input type="number" step="0.1" min="0" value="0" placeholder="0" id="minHrsFilter"
+            style="width:100%; max-width:120px; font-size:1.1rem; padding:0.6rem;">
+        </div>
+        <div style="display:flex; gap:2rem; font-size:1.1rem; font-weight:600; color:var(--text);">
+          <div>
+            <strong id="totalUsers">0</strong> total doctors
+          </div>
+          <div>
+            <strong id="activeDepts">0</strong> active department<span id="deptPlural">s</span>
+          </div>
+        </div>
       </div>
-      <div>
-        <strong id="activeDepts">0</strong> active department<span id="deptPlural">s</span>
-      </div>
     </div>
-  </div>
-</div>
 
     <div id="loading" class="loading">Click "Refresh Data" to load...</div>
     <div id="error" class="error" style="display:none;"></div>
@@ -393,6 +394,7 @@
     let userCharts = {};
     let sortStates = {};
     let isDictationVisible = false;
+    let currentMinHrs = 0; // Tracks current filter
 
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
@@ -539,63 +541,45 @@
       const sorted = Object.entries(departments)
         .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
 
+      let visibleCount = 0;
+      let totalUsersCount = 0;
+
       sorted.forEach(([dept, data]) => {
-        const avgWasted = data.avgWastedHrsPerDoc.toFixed(1);
-        const avgChars = data.avgCharsPerDoc.toFixed(0);
-        const deptCard = document.createElement('div');
-        deptCard.className = 'dept-card';
-        deptCard.innerHTML = `
-      <div class="dept-header" onclick="toggleUsers('${dept}')">
-        <div>
-          <div class="dept-name">${dept}</div>
-          
-          <!-- Total wasted hrs/day (RED) -->
-          <div class="dept-metric" style="color:var(--danger); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
-            ~${data.totalWastedHrs.toFixed(1)} wasted hrs/day
-          </div>
-          
-          <!-- Per-doctor wasted hrs/day (GREY, BIGGER, UNDER) -->
-          <div style="color:#6b7280; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
-            ${avgWasted} hrs/doctor
-          </div>
+        const avgWasted = data.avgWastedHrsPerDoc;
+        totalUsersCount += data.users.length;
 
-          <!-- Subtext (chars + active count) -->
-          <div class="dept-subtext">
-            ${data.activeCount} active doctor${data.activeCount !== 1 ? 's' : ''} •
-            ${data.total.toLocaleString()} chars total
+        // Apply filter
+        if (avgWasted >= currentMinHrs) {
+          visibleCount++;
+          const deptCard = document.createElement('div');
+          deptCard.className = 'dept-card';
+          deptCard.innerHTML = `
+        <div class="dept-header" onclick="toggleUsers('${dept}')">
+          <div>
+            <div class="dept-name">${dept}</div>
+            <div class="dept-metric" style="color:var(--danger); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
+              ~${data.totalWastedHrs.toFixed(1)} wasted hrs/day
+            </div>
+            <div style="color:#6b7280; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
+              ${avgWasted.toFixed(1)} hrs/doctor
+            </div>
+            <div class="dept-subtext">
+              ${data.activeCount} active doctor${data.activeCount !== 1 ? 's' : ''} •
+              ${data.total.toLocaleString()} chars total
+            </div>
           </div>
+          <div class="dept-toggle">Down Arrow</div>
         </div>
-        <div class="dept-toggle">Down Arrow</div>
-      </div>
-      <div id="users-${dept}" class="users-container"></div>
-    `;
-        container.appendChild(deptCard);
+        <div id="users-${dept}" class="users-container"></div>
+      `;
+          container.appendChild(deptCard);
+        }
       });
-    }
 
-    function toggleUserActive(dept, user) {
-      const data = departments[dept];
-      const wasActive = user.isActive;
-
-      if (wasActive) {
-        user.isActive = false;
-        data.total -= user.originalChars;
-        data.activeCount -= 1;
-      } else {
-        user.isActive = true;
-        data.total += user.originalChars;
-        data.activeCount += 1;
-      }
-
-      // Recalculate
-      data.totalWastedHrs = data.total / CHARS_PER_HOUR_TYPED;
-      data.avgWastedHrsPerDoc = data.activeCount > 0 ? data.totalWastedHrs / data.activeCount : 0;
-      data.avgCharsPerDoc = data.activeCount > 0 ? data.total / data.activeCount : 0;
-
-      // Update only what changed
-      renderDepartments();     // Updates per-doctor hrs in grey
-      renderUserSection(dept); // Updates list + chart
-      renderDeptChart();       // Updates top chart
+      // Update filter panel
+      document.getElementById('totalUsers').textContent = totalUsersCount;
+      document.getElementById('activeDepts').textContent = visibleCount;
+      document.getElementById('deptPlural').textContent = visibleCount === 1 ? '' : 's';
     }
 
     window.toggleUsers = function (dept) {
@@ -722,23 +706,28 @@
       });
     }
 
+    function applyFilter() {
+      const input = document.getElementById('minHrsFilter');
+      const value = input.value.trim();
+      currentMinHrs = (value === '' || isNaN(value)) ? 0 : parseFloat(value);
+      renderDepartments();
+      renderDeptChart(); // Update chart too
+    }
 
     function renderDeptChart() {
       const ctx = document.getElementById('deptChart').getContext('2d');
-      const sorted = Object.entries(departments)
+      const filtered = Object.entries(departments)
+        .filter(([_, data]) => data.avgWastedHrsPerDoc >= currentMinHrs)
         .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
-      const labels = sorted.map(([d]) => d);
-      const wastedData = sorted.map(([, d]) => d.totalWastedHrs);
 
-      if (window.deptChart && typeof window.deptChart.destroy === 'function') {
-        window.deptChart.destroy();
-      }
+      const labels = filtered.map(([d]) => d);
+      const wastedData = filtered.map(([, d]) => d.totalWastedHrs);
 
+      if (window.deptChart) window.deptChart.destroy();
       window.deptChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels,
-          datasets: [{
+          labels, datasets: [{
             label: 'Wasted Hours',
             data: wastedData,
             backgroundColor: 'rgba(239, 68, 68, 0.9)',
@@ -757,7 +746,7 @@
         }
       });
     }
-
+    
     // New: Toggle dictation view
     window.toggleDictation = function () {
       const btn = document.getElementById('dictationToggle');
@@ -855,47 +844,57 @@
     function updateCalculator() {
       const minHrsUserInput = document.getElementById('calcMinHrs').value.trim();
       const minHrsDeptInput = document.getElementById('calcMinDeptHrs').value.trim();
-    
+
       const minHrsUser = minHrsUserInput === '' || minHrsUserInput === '0' ? 0 : parseFloat(minHrsUserInput);
       const minHrsDept = minHrsDeptInput === '' || minHrsDeptInput === '0' ? 0 : parseFloat(minHrsDeptInput);
-    
+
       let activeUsers = 0;
       let activeDepts = 0;
-    
+
       Object.values(departments).forEach(dept => {
         const deptWasted = dept.totalWastedHrs;
-    
+
         // Department filter: if 0 or blank → count all depts
         if (minHrsDept === 0 || deptWasted >= minHrsDept) {
           activeDepts++;
         }
-    
+
         // User filter: if 0 or blank → count ALL users (regardless of isActive)
         dept.users.forEach(user => {
           const userWasted = user.chars / CHARS_PER_HOUR_TYPED;
-    
+
           const shouldCount = minHrsUser === 0 || userWasted >= minHrsUser;
-    
+
           if (shouldCount) {
             activeUsers++;
           }
         });
       });
-    
+
       // Update UI
       const userCountEl = document.getElementById('calcUserCount');
       const deptCountEl = document.getElementById('calcDeptCount');
-    
+
       userCountEl.textContent = activeUsers;
       document.getElementById('s1').textContent = activeUsers === 1 ? '' : 's';
-    
+
       deptCountEl.textContent = minHrsDept === 0 ? 'All' : activeDepts;
       document.getElementById('s2').textContent = activeDepts === 1 ? '' : 's';
     }
+
+    // Filter input listener
+    document.getElementById('minHrsFilter').addEventListener('input', applyFilter);
+
+    // Show filter panel after data loads
+    const originalLoadData = loadData;
+    window.loadData = async function () {
+      await originalLoadData();
+      document.getElementById('filterPanel').style.display = 'block';
+      document.getElementById('minHrsFilter').value = '0';
+      applyFilter();
+    };
 
   </script>
 </body>
 
 </html>
-
-
