@@ -21,6 +21,134 @@
       --trust-blue: #0ea5e9;
     }
 
+    .login-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .login-screen.hidden {
+      display: none;
+    }
+
+    .login-box {
+      background: white;
+      padding: 3rem 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-logo {
+      width: 220px;
+      height: auto;
+      margin-bottom: 2rem;
+      object-fit: contain;
+    }
+
+    .login-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .login-subtitle {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s;
+      margin-bottom: 1.5rem;
+    }
+
+    .login-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .login-input.error {
+      border-color: var(--danger);
+      animation: shake 0.4s;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .login-error {
+      color: var(--danger);
+      font-size: 0.9rem;
+      margin-top: -1rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .login-error.visible {
+      display: block;
+    }
+
+    .main-content {
+      display: none;
+    }
+
+    .main-content.visible {
+      display: block;
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -215,6 +343,39 @@
       font-size: 0.85rem;
       color: #0369a1;
       font-weight: 500;
+    }
+
+    .savings-comparison {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(14, 165, 233, 0.2);
+    }
+
+    .comparison-item {
+      flex: 1;
+    }
+
+    .comparison-label {
+      font-size: 0.75rem;
+      color: #0369a1;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .comparison-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .comparison-value.before {
+      color: var(--danger);
+    }
+
+    .comparison-value.after {
+      color: var(--trust-blue);
     }
 
     .sort-controls {
@@ -438,10 +599,35 @@
       opacity: 0.95;
       font-weight: 500;
     }
+
+    .savings-stat-sublabel {
+      font-size: 0.75rem;
+      opacity: 0.85;
+      font-weight: 400;
+      margin-top: 0.25rem;
+    }
   </style>
 </head>
 
 <body>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <img src="erebuni.png" alt="Erebuni Medical Center" class="login-logo">
+      <h2 class="login-title">Productivity Dashboard</h2>
+      <p class="login-subtitle">Enter password to access analytics</p>
+      <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
+      <input 
+        type="password" 
+        id="passwordInput" 
+        class="login-input" 
+        placeholder="Enter password"
+        autocomplete="off"
+      >
+      <button class="login-btn" onclick="verifyPassword()">Access Dashboard</button>
+    </div>
+  </div>
+
+  <div id="mainContent" class="main-content">
   <div class="container">
     <header>
       <h1>Productivity Dashboard</h1>
@@ -456,12 +642,14 @@
     <div id="savingsBanner" class="savings-banner">
       <div class="savings-banner-content">
         <div class="savings-stat">
-          <span class="savings-stat-value" id="totalSavings">0</span>
-          <span class="savings-stat-label">Total Hours Saved/Day</span>
+          <span class="savings-stat-value" id="totalTimeAfter">0</span>
+          <span class="savings-stat-label">Hours Spent with Dictation</span>
+          <div class="savings-stat-sublabel">(3x faster than typing)</div>
         </div>
         <div class="savings-stat">
-          <span class="savings-stat-value">3x</span>
-          <span class="savings-stat-label">Faster with Dictation</span>
+          <span class="savings-stat-value" id="totalTimeBefore">0</span>
+          <span class="savings-stat-label">Hours Wasted Currently</span>
+          <div class="savings-stat-sublabel">(typing at 20 WPM)</div>
         </div>
         <div class="savings-stat">
           <span class="savings-stat-value" id="savingsPercent">0%</span>
@@ -508,7 +696,9 @@
       Manual refresh only • 1 hr saved per 60,000 chars • Typing: 20 WPM
     </div>
   </div>
-  <script>
+</body>
+
+</html>
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
     const DICTATION_URL = DATA_URL + "dictation";
     const CHARS_PER_HOUR_SAVED = 60_000;
@@ -557,6 +747,8 @@
     }
 
     async function loadData() {
+      if (!checkAuth()) return;
+      
       const loading = document.getElementById('loading');
       const error = document.getElementById('error');
       const deptsDiv = document.getElementById('departments');
@@ -663,7 +855,7 @@
         d.totalWastedHrs = d.total / CHARS_PER_HOUR_TYPED;
         d.avgWastedHrsPerDoc = d.activeCount > 0 ? d.totalWastedHrs / d.activeCount : 0;
         d.avgCharsPerDoc = d.activeCount > 0 ? d.total / d.activeCount : 0;
-        d.potentialSavingsHrs = d.totalWastedHrs * (1 - 1/DICTATION_SPEEDUP);
+        d.timeWithDictation = d.totalWastedHrs / DICTATION_SPEEDUP;
       });
     }
 
@@ -697,13 +889,23 @@
           <div class="savings-info visible">
             <div class="savings-header">
               <span class="savings-icon">⚡</span>
-              <span class="savings-title">Dictation Potential</span>
+              <span class="savings-title">With Dictation (3x Faster)</span>
             </div>
             <div class="savings-metric">
-              ~${data.potentialSavingsHrs.toFixed(1)} hrs/day saved
+              Only ~${data.timeWithDictation.toFixed(1)} hrs/day needed
             </div>
-            <div class="savings-subtext">
-              By switching to dictation (3x faster), this department could save ${((1 - 1/DICTATION_SPEEDUP) * 100).toFixed(0)}% of wasted time
+            <div class="savings-comparison">
+              <div class="comparison-item">
+                <div class="comparison-label">Currently</div>
+                <div class="comparison-value before">${data.totalWastedHrs.toFixed(1)} hrs</div>
+              </div>
+              <div class="comparison-item">
+                <div class="comparison-label">With Dictation</div>
+                <div class="comparison-value after">${data.timeWithDictation.toFixed(1)} hrs</div>
+              </div>
+            </div>
+            <div class="savings-subtext" style="margin-top:0.5rem;">
+              Save ${((1 - 1/DICTATION_SPEEDUP) * 100).toFixed(0)}% of time - dictation completes the same work in just ${data.timeWithDictation.toFixed(1)} hours instead of ${data.totalWastedHrs.toFixed(1)}
             </div>
           </div>
         ` : '';
@@ -779,7 +981,7 @@
       const list = document.getElementById(`user-list-${dept}`);
       users.forEach(user => {
         const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
-        const savedHrs = wastedHrs * (1 - 1/DICTATION_SPEEDUP);
+        const timeWithDictation = wastedHrs / DICTATION_SPEEDUP;
         const item = document.createElement('div');
         item.className = 'user-item';
         item.style.transition = 'all 0.3s ease';
@@ -799,7 +1001,7 @@
         }
 
         const savingsHTML = isSavingsVisible && user.isActive ? `
-          <span class="user-savings">→ Save ${savedHrs.toFixed(1)} hrs with dictation</span>
+          <span class="user-savings">→ Only ${timeWithDictation.toFixed(1)} hrs with dictation</span>
         ` : '';
 
         item.innerHTML = `
@@ -829,14 +1031,14 @@
       const ctx = document.getElementById(canvasId).getContext('2d');
       const labels = activeUsers.map(u => u.original.split(' ')[0]);
       const wastedData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
-      const savedData = isSavingsVisible ? activeUsers.map(u => (u.chars / CHARS_PER_HOUR_TYPED) * (1 - 1/DICTATION_SPEEDUP)) : [];
+      const dictationData = isSavingsVisible ? activeUsers.map(u => (u.chars / CHARS_PER_HOUR_TYPED) / DICTATION_SPEEDUP) : [];
 
       if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
         userCharts[dept].destroy();
       }
 
       const datasets = [{
-        label: 'Wasted Hours',
+        label: 'Current Time Wasted',
         data: wastedData,
         backgroundColor: 'rgba(239, 68, 68, 0.9)',
         borderColor: 'rgba(239, 68, 68, 1)',
@@ -845,8 +1047,8 @@
 
       if (isSavingsVisible) {
         datasets.push({
-          label: 'Potential Savings (Dictation)',
-          data: savedData,
+          label: 'Time with Dictation',
+          data: dictationData,
           backgroundColor: 'rgba(14, 165, 233, 0.9)',
           borderColor: 'rgba(14, 165, 233, 1)',
           borderWidth: 1,
@@ -893,14 +1095,14 @@
 
       const labels = filtered.map(([d]) => d);
       const wastedData = filtered.map(([, d]) => d.totalWastedHrs);
-      const savedData = isSavingsVisible ? filtered.map(([, d]) => d.potentialSavingsHrs) : [];
+      const dictationData = isSavingsVisible ? filtered.map(([, d]) => d.timeWithDictation) : [];
 
       if (window.deptChart && typeof window.deptChart.destroy === 'function') {
         window.deptChart.destroy();
       }
 
       const datasets = [{ 
-        label: 'Wasted Hours', 
+        label: 'Current Time Wasted', 
         data: wastedData, 
         backgroundColor: 'rgba(239,68,68,0.9)', 
         borderColor: 'rgba(239,68,68,1)', 
@@ -909,8 +1111,8 @@
 
       if (isSavingsVisible) {
         datasets.push({
-          label: 'Potential Savings (Dictation)',
-          data: savedData,
+          label: 'Time with Dictation',
+          data: dictationData,
           backgroundColor: 'rgba(14, 165, 233, 0.9)',
           borderColor: 'rgba(14, 165, 233, 1)',
           borderWidth: 1
@@ -945,7 +1147,7 @@
         btn.textContent = 'Hide Potential Savings';
         btn.classList.add('savings-btn');
         banner.classList.add('visible');
-        document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Wasted Time • Blue = Potential Savings with Dictation (3x faster)';
+        document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Current Wasted Time • Blue = Time with Dictation (3x faster)';
       } else {
         btn.textContent = 'Show Potential Savings';
         btn.classList.add('savings-btn');
@@ -983,7 +1185,7 @@
         savingsBtn.style.display = 'inline-block';
         if (isSavingsVisible) {
           savingsBanner.classList.add('visible');
-          subtitle.textContent = 'All time in HOURS • Red = Wasted Time • Blue = Potential Savings with Dictation (3x faster)';
+          subtitle.textContent = 'All time in HOURS • Red = Current Wasted Time • Blue = Time with Dictation (3x faster)';
         } else {
           subtitle.textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
         }
@@ -1084,17 +1286,18 @@
 
     function updateSavingsBanner() {
       const filtered = getFilteredDepartments();
-      let totalSavings = 0;
+      let totalTimeAfter = 0;
       let totalWasted = 0;
 
       filtered.forEach(([_, dept]) => {
-        totalSavings += dept.potentialSavingsHrs;
+        totalTimeAfter += dept.timeWithDictation;
         totalWasted += dept.totalWastedHrs;
       });
 
-      const savingsPercent = totalWasted > 0 ? ((totalSavings / totalWasted) * 100).toFixed(0) : 0;
+      const savingsPercent = totalWasted > 0 ? ((1 - totalTimeAfter / totalWasted) * 100).toFixed(0) : 0;
 
-      document.getElementById('totalSavings').textContent = totalSavings.toFixed(1);
+      document.getElementById('totalTimeAfter').textContent = totalTimeAfter.toFixed(1);
+      document.getElementById('totalTimeBefore').textContent = totalWasted.toFixed(1);
       document.getElementById('savingsPercent').textContent = savingsPercent + '%';
     }
 
@@ -1119,7 +1322,7 @@
       
       deptData.totalWastedHrs = deptData.total / CHARS_PER_HOUR_TYPED;
       deptData.avgWastedHrsPerDoc = deptData.activeCount > 0 ? deptData.totalWastedHrs / deptData.activeCount : 0;
-      deptData.potentialSavingsHrs = deptData.totalWastedHrs * (1 - 1/DICTATION_SPEEDUP);
+      deptData.timeWithDictation = deptData.totalWastedHrs / DICTATION_SPEEDUP;
       
       renderUserSection(dept);
       renderDepartments();
