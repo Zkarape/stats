@@ -853,68 +853,49 @@
       });
     }
 
-
-    // ——————————————————————————————————————
-    // CALCULATOR: Update counts in real time
-    // ——————————————————————————————————————
     function updateCalculator() {
-      const minHrsUser = parseFloat(document.getElementById('calcMinHrs').value) || 0;
-      const minHrsDept = parseFloat(document.getElementById('calcMinDeptHrs').value) || 0;
-
+      const minHrsUserInput = document.getElementById('calcMinHrs').value.trim();
+      const minHrsDeptInput = document.getElementById('calcMinDeptHrs').value.trim();
+    
+      const minHrsUser = minHrsUserInput === '' || minHrsUserInput === '0' ? 0 : parseFloat(minHrsUserInput);
+      const minHrsDept = minHrsDeptInput === '' || minHrsDeptInput === '0' ? 0 : parseFloat(minHrsDeptInput);
+    
       let activeUsers = 0;
       let activeDepts = 0;
-
+    
       Object.values(departments).forEach(dept => {
         const deptWasted = dept.totalWastedHrs;
-        if (deptWasted >= minHrsDept) activeDepts++;
-
+    
+        // Department filter: if 0 or blank → count all depts
+        if (minHrsDept === 0 || deptWasted >= minHrsDept) {
+          activeDepts++;
+        }
+    
+        // User filter: if 0 or blank → count ALL users (regardless of isActive)
         dept.users.forEach(user => {
-          if (user.isActive) {
-            const userWasted = user.chars / CHARS_PER_HOUR_TYPED;
-            if (userWasted >= minHrsUser) activeUsers++;
+          const userWasted = user.chars / CHARS_PER_HOUR_TYPED;
+    
+          const shouldCount = minHrsUser === 0 || userWasted >= minHrsUser;
+    
+          if (shouldCount) {
+            activeUsers++;
           }
         });
       });
-
+    
       // Update UI
-      document.getElementById('calcUserCount').textContent = activeUsers;
+      const userCountEl = document.getElementById('calcUserCount');
+      const deptCountEl = document.getElementById('calcDeptCount');
+    
+      userCountEl.textContent = activeUsers;
       document.getElementById('s1').textContent = activeUsers === 1 ? '' : 's';
-
-      document.getElementById('calcDeptCount').textContent = activeDepts;
+    
+      deptCountEl.textContent = minHrsDept === 0 ? 'All' : activeDepts;
       document.getElementById('s2').textContent = activeDepts === 1 ? '' : 's';
     }
-
-    // Run on load & on any change
-    document.getElementById('calcMinHrs').addEventListener('input', updateCalculator);
-    document.getElementById('calcMinDeptHrs').addEventListener('input', updateCalculator);
-
-    // Hook into toggleUserActive to update calculator
-    const originalToggleUserActive = toggleUserActive;
-    window.toggleUserActive = function (dept, user) {
-      originalToggleUserActive(dept, user);
-      updateCalculator();
-    };
-
-    // Also update when data loads or sorts
-    const originalLoadData = loadData;
-    window.loadData = async function () {
-      await originalLoadData();
-      updateCalculator();
-    };
-
-    const originalRenderUserSection = renderUserSection;
-    window.renderUserSection = function (dept) {
-      originalRenderUserSection(dept);
-      updateCalculator();
-    };
-
-    const originalRenderDepartments = renderDepartments;
-    window.renderDepartments = function () {
-      originalRenderDepartments();
-      updateCalculator();
-    };
 
   </script>
 </body>
 
 </html>
+
