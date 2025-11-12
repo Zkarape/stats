@@ -78,9 +78,6 @@
       background: white; padding: 1.5rem; border-radius: 12px;
       box-shadow: var(--shadow); margin: 1.5rem 0; border: 1px solid var(--border);
     }
-    .dept-toggle { transition: transform 0.2s; }
-    .dept-toggle::before { content: 'Down Arrow'; }
-    .users-container.open ~ .dept-header .dept-toggle::before { content: 'Up Arrow'; }
     .dictation-chart { background: #fef2f2; border: 1px solid #fecaca; }
     .loading, .error { text-align: center; padding: 2rem; border-radius: 12px; margin: 1rem 0; }
     .loading { color: #64748b; background: #f8fafc; }
@@ -284,12 +281,21 @@ function renderDepartments() {
       <div class="dept-header" onclick="toggleUsers('${dept}')">
         <div>
           <div class="dept-name">${dept}</div>
-          <div class="dept-metric" style="color:var(--danger)">~${data.totalWastedHrs.toFixed(1)} wasted hrs/day</div>
-          <div class="dept-subtext" style="color:#6b7280; font-size:0.95rem;">
-            ${avgWasted} hrs/doctor • ${data.activeCount} active
+          
+          <!-- Total wasted hrs/day (RED) -->
+          <div class="dept-metric" style="color:var(--danger); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
+            ~${data.totalWastedHrs.toFixed(1)} wasted hrs/day
           </div>
+          
+          <!-- Per-doctor wasted hrs/day (GREY, BIGGER, UNDER) -->
+          <div style="color:#6b7280; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
+            ${avgWasted} hrs/doctor
+          </div>
+
+          <!-- Subtext (chars + active count) -->
           <div class="dept-subtext">
-            ${data.total.toLocaleString()} chars • ${avgChars} avg/doctor
+            ${data.activeCount} active doctor${data.activeCount !== 1 ? 's' : ''} •
+            ${data.total.toLocaleString()} chars total
           </div>
         </div>
         <div class="dept-toggle">Down Arrow</div>
@@ -581,5 +587,6 @@ function renderDeptChart() {
   </script>
 </body>
 </html>
+
 
 
