@@ -238,31 +238,42 @@
       }
     }
 
-    function processData() {
-      departments = {};
-      rawDataTyping.forEach(item => {
-        const dept = extractDepartment(item.hostname);
-        if (!departments[dept]) {
-          departments[dept] = { users: [], total: 0, count: 0 };
-          sortStates[dept] = { type: 'avg', dir: 'desc' };
-        }
-        departments[dept].users.push(item);
+  function processData() {
+    departments = {};
+    rawDataTyping.forEach(item => {
+      const dept = extractDepartment(item.hostname);
+      if (!departments[dept]) {
+        departments[dept] = { users: [], total: 0, count: 0, activeCount: 0 };
+        sortStates[dept] = { type: 'avg', dir: 'desc' };
+      }
+      // Store original chars for toggling
+      item.originalChars = item.chars;
+      departments[dept].users.push(item);
+      if (item.chars >= 2000) {
         departments[dept].total += item.chars;
         departments[dept].count += 1;
-      });
-      Object.keys(departments).forEach(dept => {
-        const totalChars = departments[dept].total;
-        departments[dept].totalSavedHrs = totalChars / CHARS_PER_HOUR_SAVED;
-        departments[dept].totalWastedHrs = totalChars / CHARS_PER_HOUR_TYPED;
-      });
-    }
-
+        departments[dept].activeCount += 1;
+        item.isActive = true;
+      } else {
+        item.isActive = false;
+      }
+    });
+    Object.keys(departments).forEach(dept => {
+      const data = departments[dept];
+      const totalChars = data.total;
+      data.totalSavedHrs = totalChars / CHARS_PER_HOUR_SAVED;
+      data.totalWastedHrs = totalChars / CHARS_PER_HOUR_TYPED;
+      data.avgPerDoctor = data.activeCount > 0 ? totalChars / data.activeCount : 0;
+    });
+  }
+      
     function renderDepartments() {
       const container = document.getElementById('departments');
       container.innerHTML = '';
       const sorted = Object.entries(departments)
         .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
       sorted.forEach(([dept, data]) => {
+        const avgPerDoc = data.avgPerDoctor.toFixed(0);
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
         deptCard.innerHTML = `
@@ -271,150 +282,147 @@
               <div class="dept-name">${dept}</div>
               <div class="dept-metric" style="color:var(--danger)">~${data.totalWastedHrs.toFixed(1)} wasted hrs/day</div>
               <div class="dept-subtext">
-                ${data.count} user${data.count > 1 ? 's' : ''} •
+                ${data.activeCount} active doctor${data.activeCount !== 1 ? 's' : ''} •
                 ${data.total.toLocaleString('en', {maximumFractionDigits: 0})} chars total
+                <br><strong>${avgPerDoc.toLocaleString()} chars/doctor</strong>
               </div>
             </div>
-            <div class="dept-toggle">▼</div>
+            <div class="dept-toggle">Down Arrow</div>
           </div>
           <div id="users-${dept}" class="users-container"></div>
         `;
         container.appendChild(deptCard);
       });
     }
-
-    window.toggleUsers = function(dept) {
-      const container = document.getElementById(`users-${dept}`);
-      const isOpen = container.classList.toggle('open');
-      const toggle = container.parentElement.querySelector('.dept-toggle');
-      toggle.textContent = isOpen ? '▲' : '▼';
-      if (isOpen && !container.dataset.rendered) {
-        renderUserSection(dept);
-        container.dataset.rendered = 'true';
+      
+      window.toggleUsers = function(dept) {
+        const container = document.getElementById(`users-${dept}`);
+        const isOpen = container.classList.toggle('open');
+        const toggle = container.parentElement.querySelector('.dept-toggle');
+        toggle.textContent = isOpen ? '▲' : '▼';
+        if (isOpen && !container.dataset.rendered) {
+          renderUserSection(dept);
+          container.dataset.rendered = 'true';
+        }
+      };
+  
+  function renderUserSection(dept) {
+    const container = document.getElementById(`users-${dept}`);
+    const state = sortStates[dept];
+    let users = [...departments[dept].users];
+    users.sort((a, b) => {
+      const valA = a.isActive ? a.chars : 0;
+      const valB = b.isActive ? b.chars : 0;
+      return state.dir === 'desc' ? valB - valA : valA - valB;
+    });
+  
+    container.innerHTML = `
+      <div class="sort-controls">
+        <select onchange="updateSort('${dept}', 'type', this.value)">
+          <option value="avg" selected>Avg Chars</option>
+        </select>
+        <select onchange="updateSort('${dept}', 'dir', this.value)">
+          <option value="desc" selected>Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+      </div>
+      <div class="user-list" id="user-list-${dept}"></div>
+      <div class="chart-container">
+        <canvas id="user-chart-${dept}"></canvas>
+      </div>
+    `;
+  
+    const list = document.getElementById(`user-list-${dept}`);
+    users.forEach(user => {
+      const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
+      const item = document.createElement('div');
+      item.className = 'user-item';
+      if (!user.isActive) {
+        item.style.opacity = '0.4';
+        item.style.pointerEvents = 'none';
+        item.style.filter = 'blur(1px)';
+        item.style.transition = 'all 0.3s ease';
       }
-    };
-
-    function renderUserSection(dept) {
-      const container = document.getElementById(`users-${dept}`);
-      const state = sortStates[dept];
-      let users = [...departments[dept].users];
-      users.sort((a, b) => {
-        const valA = a.chars;
-        const valB = b.chars;
-        return state.dir === 'desc' ? valB - valA : valA - valB;
-      });
-      container.innerHTML = `
-        <div class="sort-controls">
-          <select onchange="updateSort('${dept}', 'type', this.value)">
-            <option value="avg" selected>Avg Chars</option>
-            <option value="total">Total Chars</option>
-          </select>
-          <select onchange="updateSort('${dept}', 'dir', this.value)">
-            <option value="desc" selected>Descending</option>
-            <option value="asc">Ascending</option>
-          </select>
-        </div>
-        <div class="user-list" id="user-list-${dept}"></div>
-        <div class="chart-container">
-          <canvas id="user-chart-${dept}"></canvas>
+      item.onclick = () => toggleUserActive(dept, user);
+      item.innerHTML = `
+        <div class="user-name">${user.original}</div>
+        <div class="user-metric">
+          ${user.chars.toLocaleString()} chars •
+          <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs wasted</span>
+          ${!user.isActive ? ' <em>(click to include)</em>' : ''}
         </div>
       `;
-      const list = document.getElementById(`user-list-${dept}`);
-      users.forEach(user => {
-        const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
-        const item = document.createElement('div');
-        item.className = 'user-item';
-        item.innerHTML = `
-          <div class="user-name">${user.original}</div>
-          <div class="user-metric">
-            ${user.chars.toLocaleString()} chars •
-            <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs wasted</span>
-          </div>
-        `;
-        list.appendChild(item);
-      });
-      renderUserChart(dept, users);
+      list.appendChild(item);
+    });
+    renderUserChart(dept, users.filter(u => u.isActive));
+  }
+      
+  function renderUserChart(dept, allUsers) {
+    const activeUsers = allUsers.filter(u => u.isActive);
+    const canvasId = `user-chart-${dept}`;
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    const labels = activeUsers.map(u => u.original.split(' ')[0]);
+    const wastedData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
+    if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
+      userCharts[dept].destroy();
     }
-
-    function renderUserChart(dept, users) {
-      const canvasId = `user-chart-${dept}`;
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      const labels = users.map(u => u.original.split(' ')[0]);
-      const wastedData = users.map(u => u.chars / CHARS_PER_HOUR_TYPED);
-      if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
-        userCharts[dept].destroy();
-      }
-      userCharts[dept] = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Wasted Hours',
-              data: wastedData,
-              backgroundColor: 'rgba(239, 68, 68, 0.9)',
-              borderColor: 'rgba(239, 68, 68, 1)',
-              borderWidth: 1,
-            }
-          ]
+    userCharts[dept] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Wasted Hours',
+          data: wastedData,
+          backgroundColor: 'rgba(239, 68, 68, 0.9)',
+          borderColor: 'rgba(239, 68, 68, 1)',
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} hrs/day` } }
         },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} hrs/day` } }
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              title: { display: true, text: 'Hours per Day' }
-            },
-            y: {
-              grid: { display: false }
-            }
-          }
+        scales: {
+          x: { beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
+          y: { grid: { display: false } }
         }
-      });
-    }
-
-    window.updateSort = function(dept, key, value) {
-      sortStates[dept][key] = value;
-      const container = document.getElementById(`users-${dept}`);
-      container.innerHTML = '';
-      container.dataset.rendered = 'false';
-      renderUserSection(dept);
-    };
-
-    function renderDeptChart() {
-      const ctx = document.getElementById('deptChart').getContext('2d');
-      const sorted = Object.entries(departments)
-        .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
-      const labels = sorted.map(([d]) => d);
-      const wastedData = sorted.map(([, d]) => d.totalWastedHrs);
-      if (window.deptChart && typeof window.deptChart.destroy === 'function') {
-        window.deptChart.destroy();
       }
-      window.deptChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            { label: 'Wasted Hours', data: wastedData, backgroundColor: 'rgba(239, 68, 68, 0.9)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }
-          ]
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          plugins: { legend: { position: 'top' } },
-          scales: {
-            x: { beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
-            y: { grid: { display: false } }
-          }
-        }
-      });
+    });
+  }
+      
+  function renderDeptChart() {
+    const ctx = document.getElementById('deptChart').getContext('2d');
+    const sorted = Object.entries(departments)
+      .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
+    const labels = sorted.map(([d]) => d);
+    const wastedData = sorted.map(([, d]) => d.totalWastedHrs);
+    if (window.deptChart && typeof window.deptChart.destroy === 'function') {
+      window.deptChart.destroy();
     }
-
+    window.deptChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Wasted Hours', data: wastedData,
+          backgroundColor: 'rgba(239, 68, 68, 0.9)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: {
+          x: { beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  }
+    
     // New: Toggle dictation view
     window.toggleDictation = function() {
       const btn = document.getElementById('dictationToggle');
@@ -511,5 +519,6 @@
   </script>
 </body>
 </html>
+
 
 
