@@ -88,7 +88,6 @@
       border-radius: 10px;
       font-size: 1rem;
       transition: all 0.3s;
-      margin-bottom: 1.5rem;
     }
 
     .password-wrapper {
@@ -157,7 +156,6 @@
     .login-error {
       color: var(--danger);
       font-size: 0.9rem;
-      margin-top: -1rem;
       margin-bottom: 1rem;
       display: none;
     }
@@ -635,108 +633,114 @@
 </head>
 
 <body>
-  <!-- ====================== 1. UPDATE THE LOGIN FORM ====================== -->
   <div id="loginScreen" class="login-screen">
     <div class="login-box">
       <img src="erebuni.png" alt="Erebuni Medical Center" class="login-logo">
       <h2 class="login-title">Productivity Dashboard</h2>
       <p class="login-subtitle">Enter password to access analytics</p>
-  
       <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
-  
-      <!-- *** NEW WRAPPER + EYE BUTTON *** -->
       <div class="password-wrapper">
-        <input type="password" id="passwordInput" class="login-input" placeholder="Enter password" autocomplete="off">
-        <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password">Eye</button>
+        <input 
+          type="password" 
+          id="passwordInput" 
+          class="login-input" 
+          placeholder="Enter password"
+          autocomplete="off"
+        >
+        <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+          👁️
+        </button>
       </div>
-  
       <button class="login-btn" onclick="handleLogin()">Access Dashboard</button>
     </div>
   </div>
 
-  
   <div id="mainContent" class="main-content">
-  <div class="container">
-    <header>
-      <h1>Productivity Dashboard</h1>
-      <p class="subtitle" id="subtitle">All time in HOURS • Red = Wasted Time at 20 WPM</p>
-    </header>
-    <div class="controls">
-      <button onclick="loadData()">Refresh Data</button>
-      <button id="savingsToggle" onclick="toggleSavings()" style="display:none;" class="savings-btn">Show Potential Savings</button>
-      <button id="dictationToggle" onclick="toggleDictation()" style="display:none;">Show Dictation Data</button>
-    </div>
-
-    <div id="savingsBanner" class="savings-banner">
-      <div class="savings-banner-content">
-        <div class="savings-stat">
-          <span class="savings-stat-value" id="totalTimeAfter">0</span>
-          <span class="savings-stat-label">Hours Spent with Dictation</span>
-          <div class="savings-stat-sublabel">(3x faster than typing)</div>
-        </div>
-        <div class="savings-stat">
-          <span class="savings-stat-value" id="totalTimeBefore">0</span>
-          <span class="savings-stat-label">Hours Wasted Currently</span>
-          <div class="savings-stat-sublabel">(typing at 20 WPM)</div>
-        </div>
-        <div class="savings-stat">
-          <span class="savings-stat-value" id="savingsPercent">0%</span>
-          <span class="savings-stat-label">Time Reduction</span>
-        </div>
+    <div class="container">
+      <header>
+        <h1>Productivity Dashboard</h1>
+        <p class="subtitle" id="subtitle">All time in HOURS • Red = Wasted Time at 20 WPM</p>
+      </header>
+      <div class="controls">
+        <button onclick="loadData()">Refresh Data</button>
+        <button id="savingsToggle" onclick="toggleSavings()" style="display:none;" class="savings-btn">Show Potential Savings</button>
+        <button id="dictationToggle" onclick="toggleDictation()" style="display:none;">Show Dictation Data</button>
       </div>
-    </div>
 
-    <div id="filterPanel" class="calculator-panel" style="display:none; margin-top:1.5rem;">
-      <div class="calculator-title">Filter Departments by Avg Hrs/Doctor</div>
-      <div class="calculator-row" style="align-items:center; gap:1.5rem; flex-wrap:wrap;">
-        <div style="flex:1; min-width:200px;">
-          <label style="font-weight:600; display:block; margin-bottom:0.5rem;">
-            Show departments where average wasted time per doctor is ≥
-          </label>
-          <input type="number" step="0.1" min="0" value="0" placeholder="0" id="minHrsFilter"
-            style="width:100%; max-width:120px; font-size:1.1rem; padding:0.6rem;">
-        </div>
-        <div style="display:flex; gap:2rem; font-size:1.1rem; font-weight:600; color:var(--text);">
-          <div>
-            <strong id="totalUsers">0</strong> doctors in filtered depts
+      <div id="savingsBanner" class="savings-banner">
+        <div class="savings-banner-content">
+          <div class="savings-stat">
+            <span class="savings-stat-value" id="totalTimeAfter">0</span>
+            <span class="savings-stat-label">Hours Spent with Dictation</span>
+            <div class="savings-stat-sublabel">(3x faster than typing)</div>
           </div>
-          <div>
-            <strong id="activeDepts">0</strong> department<span id="deptPlural">s</span>
+          <div class="savings-stat">
+            <span class="savings-stat-value" id="totalTimeBefore">0</span>
+            <span class="savings-stat-label">Hours Wasted Currently</span>
+            <div class="savings-stat-sublabel">(typing at 20 WPM)</div>
+          </div>
+          <div class="savings-stat">
+            <span class="savings-stat-value" id="savingsPercent">0%</span>
+            <span class="savings-stat-label">Time Reduction</span>
           </div>
         </div>
       </div>
-    </div>
 
-    <div id="loading" class="loading">Click "Refresh Data" to load...</div>
-    <div id="error" class="error" style="display:none;"></div>
-    <div id="chartContainer" class="chart-container" style="display:none;">
-      <canvas id="deptChart"></canvas>
-    </div>
-    <div id="departments"></div>
-    <div id="dictationSection" class="dictation-container hidden">
-      <h2 class="dictation-title">Dictation Data (Chars/Day)</h2>
-      <div id="dictationList"></div>
-      <div class="chart-container dictation-chart">
-        <canvas id="dictationChart"></canvas>
+      <div id="filterPanel" class="calculator-panel" style="display:none; margin-top:1.5rem;">
+        <div class="calculator-title">Filter Departments by Avg Hrs/Doctor</div>
+        <div class="calculator-row" style="align-items:center; gap:1.5rem; flex-wrap:wrap;">
+          <div style="flex:1; min-width:200px;">
+            <label style="font-weight:600; display:block; margin-bottom:0.5rem;">
+              Show departments where average wasted time per doctor is ≥
+            </label>
+            <input type="number" step="0.1" min="0" value="0" placeholder="0" id="minHrsFilter"
+              style="width:100%; max-width:120px; font-size:1.1rem; padding:0.6rem;">
+          </div>
+          <div style="display:flex; gap:2rem; font-size:1.1rem; font-weight:600; color:var(--text);">
+            <div>
+              <strong id="totalUsers">0</strong> doctors in filtered depts
+            </div>
+            <div>
+              <strong id="activeDepts">0</strong> department<span id="deptPlural">s</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="footer">
-      Manual refresh only • 1 hr saved per 60,000 chars • Typing: 20 WPM
+
+      <div id="loading" class="loading">Click "Refresh Data" to load...</div>
+      <div id="error" class="error" style="display:none;"></div>
+      <div id="chartContainer" class="chart-container" style="display:none;">
+        <canvas id="deptChart"></canvas>
+      </div>
+      <div id="departments"></div>
+      <div id="dictationSection" class="dictation-container hidden">
+        <h2 class="dictation-title">Dictation Data (Chars/Day)</h2>
+        <div id="dictationList"></div>
+        <div class="chart-container dictation-chart">
+          <canvas id="dictationChart"></canvas>
+        </div>
+      </div>
+      <div class="footer">
+        Manual refresh only • 1 hr saved per 60,000 chars • Typing: 20 WPM
+      </div>
     </div>
   </div>
-</body>
 
-</html>
+  <script>
+    const CORRECT_PASSWORD = "erebuni2024";
+    const AUTH_KEY = 'productivity_auth';
+    
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
     const DICTATION_URL = DATA_URL + "dictation";
     const CHARS_PER_HOUR_SAVED = 60_000;
     const TYPING_SPEED_WPM = 16;
     const CHARS_PER_WORD = 5;
     const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60;
-    const DICTATION_SPEEDUP = 3; // 3x faster
+    const DICTATION_SPEEDUP = 3;
     const STORAGE_KEY_TYPING = 'productivity_typing_data';
     const STORAGE_KEY_DICTATION = 'productivity_dictation_data';
     const STORAGE_KEY_TIMESTAMP = 'productivity_data_timestamp';
+    
     let rawDataTyping = [];
     let rawDataDictation = [];
     let departments = {};
@@ -745,6 +749,42 @@
     let isDictationVisible = false;
     let isSavingsVisible = false;
     let currentMinHrs = 0;
+
+    function handleLogin() {
+      const input = document.getElementById('passwordInput');
+      const error = document.getElementById('loginError');
+      const password = input.value.trim();
+
+      if (password === CORRECT_PASSWORD) {
+        localStorage.setItem(AUTH_KEY, 'true');
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainContent').classList.add('visible');
+        error.classList.remove('visible');
+        input.classList.remove('error');
+      } else {
+        error.classList.add('visible');
+        input.classList.add('error');
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    function checkAuth() {
+      return localStorage.getItem(AUTH_KEY) === 'true';
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('passwordInput');
+      const btn = event.target;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
 
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
@@ -1186,7 +1226,6 @@
       renderDepartments();
       renderDeptChart();
       
-      // Re-render any open user sections
       Object.keys(departments).forEach(dept => {
         const container = document.getElementById(`users-${dept}`);
         if (container && container.classList.contains('open')) {
@@ -1404,46 +1443,22 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      if (checkAuth()) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainContent').classList.add('visible');
+      }
+      
+      document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          handleLogin();
+        }
+      });
+      
       loadCachedData();
     });
 
     document.getElementById('minHrsFilter').addEventListener('input', applyFilter);
-
-    // ----- Password toggle (eye icon) -----
-      const pwdInput   = document.getElementById('passwordInput');
-      const pwdToggle  = document.getElementById('passwordToggle');
-    
-      pwdToggle.addEventListener('click', () => {
-        const isPwd = pwdInput.type === 'password';
-        pwdInput.type = isPwd ? 'text' : 'password';
-        pwdToggle.textContent = isPwd ? 'Hide' : 'Eye';
-        pwdToggle.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
-      });
-    
-      // ----- Simple login handler -----
-      function handleLogin() {
-        const entered = pwdInput.value.trim();
-        const CORRECT = 'demo123';               // <-- change to whatever you need
-        const error   = document.getElementById('loginError');
-    
-        if (entered === CORRECT) {
-          document.getElementById('loginScreen').classList.add('hidden');
-          document.getElementById('mainContent').classList.add('visible');
-        } else {
-          error.classList.add('visible');
-          pwdInput.classList.add('error');
-          setTimeout(() => {
-            pwdInput.classList.remove('error');
-          }, 600);
-        }
-      }
-    
-      // Allow pressing Enter in the password field
-      pwdInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') handleLogin();
-      });
   </script>
 </body>
 
 </html>
-
