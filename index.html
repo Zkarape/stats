@@ -278,8 +278,6 @@
       display: none !important;
     }
 
-
-    /* Calculator Panel */
     .calculator-panel {
       background: white;
       border: 1px solid var(--border);
@@ -364,7 +362,6 @@
       </div>
     </div>
 
-
     <div id="loading" class="loading">Click "Refresh Data" to load...</div>
     <div id="error" class="error" style="display:none;"></div>
     <div id="chartContainer" class="chart-container" style="display:none;">
@@ -384,40 +381,29 @@
   </div>
   <script>
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
-    const DICTATION_URL = DATA_URL + "dictation";  // New Lambda endpoint for dictation
+    const DICTATION_URL = DATA_URL + "dictation";
     const CHARS_PER_HOUR_SAVED = 60_000;
     const TYPING_SPEED_WPM = 16;
     const CHARS_PER_WORD = 5;
-    const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60; // 6,000
-    let rawDataTyping = [];  // Cached typing data
-    let rawDataDictation = [];  // Cached dictation data
+    const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60;
+    let rawDataTyping = [];
+    let rawDataDictation = [];
     let departments = {};
     let userCharts = {};
     let sortStates = {};
     let isDictationVisible = false;
-    let currentMinHrs = 0; // Tracks current filter
+    let currentMinHrs = 0;
 
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
 
-      // -----------------------------------------------------------------
-      // 1. Cardiology sub-groups (each gets its own department)
-      // -----------------------------------------------------------------
       if (lower.includes('cardiopulm')) return 'Cardio-Pulm';
       if (lower.includes('cardiobit')) return 'Cardio-Bit';
       if (lower.includes('cardiodoc')) return 'Cardio-Doc';
       if (lower.includes('cardiopost')) return 'Cardio-Post';
-      // Mcardio → Cardio-Pulm (as requested)
       if (lower.includes('mcardio')) return 'Cardio-Pulm';
-
-      // -----------------------------------------------------------------
-      // 2. Existing generic cardiology (fallback)
-      // -----------------------------------------------------------------
       if (lower.includes('cardio')) return 'Cardiology';
 
-      // -----------------------------------------------------------------
-      // 3. All other departments (unchanged)
-      // -----------------------------------------------------------------
       const map = {
         'x-ray': 'X-Ray', 'xray': 'X-Ray',
         'mrt': 'MRT', 'mrtdoc': 'MRT',
@@ -433,9 +419,6 @@
         if (lower.includes(key)) return name;
       }
 
-      // -----------------------------------------------------------------
-      // 4. Default – first word before digits/dashes
-      // -----------------------------------------------------------------
       return hostname.split(/[\d-]/)[0].replace(/\b\w/g, c => c.toUpperCase());
     }
 
@@ -466,6 +449,9 @@
           })
           .filter(Boolean);
         processData();
+        document.getElementById('filterPanel').style.display = 'block';
+        document.getElementById('minHrsFilter').value = '0';
+        currentMinHrs = 0;
         renderDepartments();
         renderDeptChart();
         loading.style.display = 'none';
@@ -516,7 +502,7 @@
           departments[dept] = { users: [], total: 0, count: 0, activeCount: 0 };
           sortStates[dept] = { type: 'avg', dir: 'desc' };
         }
-        item.originalChars = item.chars;   // keep original value
+        item.originalChars = item.chars;
         departments[dept].users.push(item);
         if (item.chars >= 2000) {
           item.isActive = true;
@@ -536,17 +522,21 @@
       });
     }
 
+    function getFilteredDepartments() {
+      return Object.entries(departments)
+        .filter(([_, data]) => data.avgWastedHrsPerDoc >= currentMinHrs)
+        .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
+    }
+
     function renderDepartments() {
       const container = document.getElementById('departments');
       container.innerHTML = '';
-      const sorted = Object.entries(departments)
-        .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
+      const filtered = getFilteredDepartments();
 
-      sorted.forEach(([dept, data]) => {
-        if (data.avgWastedHrsPerDoc >= currentMinHrs) {
-          const deptCard = document.createElement('div');
-          deptCard.className = 'dept-card';
-          deptCard.innerHTML = `
+      filtered.forEach(([dept, data]) => {
+        const deptCard = document.createElement('div');
+        deptCard.className = 'dept-card';
+        deptCard.innerHTML = `
           <div class="dept-header" onclick="toggleUsers('${dept}')">
             <div>
               <div class="dept-name">${dept}</div>
@@ -561,22 +551,21 @@
                 ${data.total.toLocaleString()} chars total
               </div>
             </div>
-            <div class="dept-toggle">Down Arrow</div>
+            <div class="dept-toggle">▼</div>
           </div>
           <div id="users-${dept}" class="users-container"></div>
         `;
-          container.appendChild(deptCard);
-        }
+        container.appendChild(deptCard);
       });
 
-      updateFilterStats(); // Updates doctor & dept count
+      updateFilterStats();
     }
 
     window.toggleUsers = function (dept) {
       const container = document.getElementById(`users-${dept}`);
       const isOpen = container.classList.toggle('open');
       const toggle = container.parentElement.querySelector('.dept-toggle');
-      toggle.textContent = isOpen ? 'Up Arrow' : 'Down Arrow';
+      toggle.textContent = isOpen ? '▲' : '▼';
 
       if (isOpen && !container.dataset.rendered) {
         renderUserSection(dept);
@@ -587,7 +576,7 @@
     function renderUserSection(dept) {
       const container = document.getElementById(`users-${dept}`);
       const wasOpen = container.classList.contains('open');
-      const scrollY = window.scrollY;  // Save scroll
+      const scrollY = window.scrollY;
 
       const state = sortStates[dept];
       let users = [...departments[dept].users];
@@ -599,20 +588,20 @@
       });
 
       container.innerHTML = `
-    <div class="sort-controls">
-      <select onchange="updateSort('${dept}', 'type', this.value)">
-        <option value="avg" selected>Avg Chars</option>
-      </select>
-      <select onchange="updateSort('${dept}', 'dir', this.value)">
-        <option value="desc" selected>Descending</option>
-        <option value="asc">Ascending</option>
-      </select>
-    </div>
-    <div class="user-list" id="user-list-${dept}"></div>
-    <div class="chart-container">
-      <canvas id="user-chart-${dept}"></canvas>
-    </div>
-  `;
+        <div class="sort-controls">
+          <select onchange="updateSort('${dept}', 'type', this.value)">
+            <option value="avg" selected>Avg Chars</option>
+          </select>
+          <select onchange="updateSort('${dept}', 'dir', this.value)">
+            <option value="desc" selected>Descending</option>
+            <option value="asc">Ascending</option>
+          </select>
+        </div>
+        <div class="user-list" id="user-list-${dept}"></div>
+        <div class="chart-container">
+          <canvas id="user-chart-${dept}"></canvas>
+        </div>
+      `;
 
       const list = document.getElementById(`user-list-${dept}`);
       users.forEach(user => {
@@ -621,7 +610,7 @@
         item.className = 'user-item';
         item.style.transition = 'all 0.3s ease';
         item.onclick = (e) => {
-          e.stopPropagation(); // Prevent header click
+          e.stopPropagation();
           toggleUserActive(dept, user);
         };
 
@@ -636,25 +625,22 @@
         }
 
         item.innerHTML = `
-      <div class="user-name">${user.original}</div>
-      <div class="user-metric">
-        ${user.chars.toLocaleString()} chars •
-        <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs</span>
-        ${!user.isActive ? ' <em style="color:#9ca3af">(click to include)</em>' : ''}
-      </div>
-    `;
+          <div class="user-name">${user.original}</div>
+          <div class="user-metric">
+            ${user.chars.toLocaleString()} chars •
+            <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs</span>
+            ${!user.isActive ? ' <em style="color:#9ca3af">(click to include)</em>' : ''}
+          </div>
+        `;
         list.appendChild(item);
       });
 
-      // Restore open state
       if (wasOpen) {
         container.classList.add('open');
-        container.parentElement.querySelector('.dept-toggle').textContent = 'Up Arrow';
+        container.parentElement.querySelector('.dept-toggle').textContent = '▲';
       }
 
       renderUserChart(dept, users.filter(u => u.isActive));
-
-      // Restore scroll
       window.scrollTo(0, scrollY);
     }
 
@@ -704,24 +690,9 @@
       renderDeptChart();
     }
 
-    // Final loadData wrapper
-    const originalLoadData = loadData;
-    window.loadData = async function () {
-      await originalLoadData();
-      document.getElementById('filterPanel').style.display = 'block';
-      document.getElementById('minHrsFilter').value = '0';
-      currentMinHrs = 0;
-      updateFilterStats();
-      renderDepartments();
-      renderDeptChart();
-    };
-
-
     function renderDeptChart() {
       const ctx = document.getElementById('deptChart').getContext('2d');
-      const filtered = Object.entries(departments)
-        .filter(([_, d]) => d.avgWastedHrsPerDoc >= currentMinHrs)
-        .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
+      const filtered = getFilteredDepartments();
 
       const labels = filtered.map(([d]) => d);
       const data = filtered.map(([, d]) => d.totalWastedHrs);
@@ -732,7 +703,16 @@
 
       window.deptChart = new Chart(ctx, {
         type: 'bar',
-        data: { labels, datasets: [{ label: 'Wasted Hours', data, backgroundColor: 'rgba(239,68,68,0.9)', borderColor: 'rgba(239,68,68,1)', borderWidth: 1 }] },
+        data: { 
+          labels, 
+          datasets: [{ 
+            label: 'Wasted Hours', 
+            data, 
+            backgroundColor: 'rgba(239,68,68,0.9)', 
+            borderColor: 'rgba(239,68,68,1)', 
+            borderWidth: 1 
+          }] 
+        },
         options: {
           indexAxis: 'y',
           responsive: true,
@@ -743,29 +723,26 @@
           }
         }
       });
-
-      updateFilterStats();
     }
 
-    // New: Toggle dictation view
     window.toggleDictation = function () {
       const btn = document.getElementById('dictationToggle');
       const deptsDiv = document.getElementById('departments');
       const chartContainer = document.getElementById('chartContainer');
       const dictationSection = document.getElementById('dictationSection');
       const subtitle = document.getElementById('subtitle');
+      const filterPanel = document.getElementById('filterPanel');
 
       if (isDictationVisible) {
-        // Hide dictation, show typing
         dictationSection.classList.add('hidden');
         deptsDiv.classList.remove('hidden');
         chartContainer.style.display = 'block';
+        filterPanel.style.display = 'block';
         btn.textContent = 'Show Dictation Data';
         btn.classList.remove('dictation-btn');
         subtitle.textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
         isDictationVisible = false;
       } else {
-        // Show dictation, hide typing
         if (rawDataDictation.length === 0) {
           loadDictationData();
         } else {
@@ -773,6 +750,7 @@
         }
         deptsDiv.classList.add('hidden');
         chartContainer.style.display = 'none';
+        filterPanel.style.display = 'none';
         dictationSection.classList.remove('hidden');
         btn.textContent = 'Hide Dictation Data';
         btn.classList.add('dictation-btn');
@@ -781,7 +759,6 @@
       }
     };
 
-    // New: Render dictation list and chart
     function renderDictationData() {
       const list = document.getElementById('dictationList');
       const sortedData = [...rawDataDictation].sort((a, b) => b.chars - a.chars);
@@ -798,7 +775,6 @@
       renderDictationChart(sortedData);
     }
 
-    // New: Dictation chart (top 10 users, horizontal bar)
     function renderDictationChart(data) {
       const topData = data.slice(0, 10);
       const ctx = document.getElementById('dictationChart').getContext('2d');
@@ -842,24 +818,48 @@
     }
 
     function updateFilterStats() {
+      const filtered = getFilteredDepartments();
       let filteredDoctors = 0;
-      let visibleDepts = 0;
 
-      Object.values(departments).forEach(dept => {
-        if (dept.avgWastedHrsPerDoc >= currentMinHrs) {
-          visibleDepts++;
-          filteredDoctors += dept.users.length; // Count ALL doctors in filtered depts
-        }
+      filtered.forEach(([_, dept]) => {
+        filteredDoctors += dept.users.length;
       });
 
+      const visibleDepts = filtered.length;
+
       document.getElementById('totalUsers').textContent = filteredDoctors;
-      document.getElementBy('activeDepts').textContent = visibleDepts;
+      document.getElementById('activeDepts').textContent = visibleDepts;
       document.getElementById('deptPlural').textContent = visibleDepts === 1 ? '' : 's';
     }
 
-    // Filter input listener
-    document.getElementById('minHrsFilter').addEventListener('input', applyFilter);
+    window.updateSort = function(dept, field, value) {
+      sortStates[dept][field] = value;
+      renderUserSection(dept);
+    };
 
+    window.toggleUserActive = function(dept, user) {
+      user.isActive = !user.isActive;
+      
+      const deptData = departments[dept];
+      deptData.total = 0;
+      deptData.activeCount = 0;
+      
+      deptData.users.forEach(u => {
+        if (u.isActive) {
+          deptData.total += u.chars;
+          deptData.activeCount += 1;
+        }
+      });
+      
+      deptData.totalWastedHrs = deptData.total / CHARS_PER_HOUR_TYPED;
+      deptData.avgWastedHrsPerDoc = deptData.activeCount > 0 ? deptData.totalWastedHrs / deptData.activeCount : 0;
+      
+      renderUserSection(dept);
+      renderDepartments();
+      renderDeptChart();
+    };
+
+    document.getElementById('minHrsFilter').addEventListener('input', applyFilter);
   </script>
 </body>
 
