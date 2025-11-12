@@ -386,6 +386,9 @@
     const TYPING_SPEED_WPM = 16;
     const CHARS_PER_WORD = 5;
     const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60;
+    const STORAGE_KEY_TYPING = 'productivity_typing_data';
+    const STORAGE_KEY_DICTATION = 'productivity_dictation_data';
+    const STORAGE_KEY_TIMESTAMP = 'productivity_data_timestamp';
     let rawDataTyping = [];
     let rawDataDictation = [];
     let departments = {};
@@ -448,6 +451,11 @@
             return { hostname, chars, original: hostPart };
           })
           .filter(Boolean);
+        
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEY_TYPING, JSON.stringify(rawDataTyping));
+        localStorage.setItem(STORAGE_KEY_TIMESTAMP, new Date().toISOString());
+        
         processData();
         document.getElementById('filterPanel').style.display = 'block';
         document.getElementById('minHrsFilter').value = '0';
@@ -458,6 +466,7 @@
         chartContainer.style.display = 'block';
         document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
         document.getElementById('dictationToggle').style.display = 'inline-block';
+        updateLastRefreshTime();
       } catch (err) {
         loading.style.display = 'none';
         error.style.display = 'block';
@@ -485,6 +494,10 @@
             return { hostname, chars, original: hostPart };
           })
           .filter(Boolean);
+        
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEY_DICTATION, JSON.stringify(rawDataDictation));
+        
         renderDictationData();
         loading.style.display = 'none';
       } catch (err) {
@@ -523,9 +536,22 @@
     }
 
     function getFilteredDepartments() {
-      return Object.entries(departments)
-        .filter(([_, data]) => data.avgWastedHrsPerDoc > currentMinHrs)
+      const filtered = Object.entries(departments)
+        .filter(([deptName, data]) => {
+          // Round to 1 decimal place for comparison to avoid floating point issues
+          const deptHrs = Math.round(data.avgWastedHrsPerDoc * 10) / 10;
+          const threshold = Math.round(currentMinHrs * 10) / 10;
+          const meetsThreshold = deptHrs >= threshold;
+          
+          // Debug logging
+          if (currentMinHrs > 0) {
+            console.log(`${deptName}: ${deptHrs.toFixed(1)} hrs/doc (threshold: ${threshold.toFixed(1)}) ${meetsThreshold ? '✓' : '✗'}`);
+          }
+          return meetsThreshold;
+        })
         .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
+      
+      return filtered;
     }
 
     function renderDepartments() {
@@ -544,7 +570,7 @@
                 ~${data.totalWastedHrs.toFixed(1)} wasted hrs/day
               </div>
               <div style="color:#6b7280; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
-                ${data.avgWastedHrsPerDoc.toFixed(1)} hrs/doctor
+                ${data.avgWastedHrsPerDoc.toFixed(1)} hrs/doctor (avg)
               </div>
               <div class="dept-subtext">
                 ${data.activeCount} active doctor${data.activeCount !== 1 ? 's' : ''} •
@@ -685,9 +711,15 @@
     function applyFilter() {
       const input = document.getElementById('minHrsFilter');
       const value = input.value.trim();
-      currentMinHrs = (value === '' || isNaN(value)) ? 0 : parseFloat(value);
-      renderDepartments();
-      renderDeptChart();
+      const newMinHrs = (value === '' || isNaN(value)) ? 0 : parseFloat(value);
+      
+      // Only re-render if the value actually changed
+      if (newMinHrs !== currentMinHrs) {
+        currentMinHrs = newMinHrs;
+        console.log('Filter applied:', currentMinHrs); // Debug
+        renderDepartments();
+        renderDeptChart();
+      }
     }
 
     function renderDeptChart() {
@@ -859,9 +891,56 @@
       renderDeptChart();
     };
 
+    function updateLastRefreshTime() {
+      const timestamp = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
+      if (timestamp) {
+        const date = new Date(timestamp);
+        const timeStr = date.toLocaleString();
+        document.querySelector('.footer').innerHTML = `
+          Manual refresh only • 1 hr saved per 60,000 chars • Typing: 20 WPM<br>
+          <span style="color: #10b981; font-weight: 600;">Last refreshed: ${timeStr}</span>
+        `;
+      }
+    }
+
+    function loadCachedData() {
+      const cachedTyping = localStorage.getItem(STORAGE_KEY_TYPING);
+      const cachedDictation = localStorage.getItem(STORAGE_KEY_DICTATION);
+      
+      if (cachedTyping) {
+        try {
+          rawDataTyping = JSON.parse(cachedTyping);
+          processData();
+          document.getElementById('filterPanel').style.display = 'block';
+          document.getElementById('minHrsFilter').value = '0';
+          currentMinHrs = 0;
+          renderDepartments();
+          renderDeptChart();
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('chartContainer').style.display = 'block';
+          document.getElementById('dictationToggle').style.display = 'inline-block';
+          updateLastRefreshTime();
+        } catch (err) {
+          console.error('Error loading cached data:', err);
+        }
+      }
+      
+      if (cachedDictation) {
+        try {
+          rawDataDictation = JSON.parse(cachedDictation);
+        } catch (err) {
+          console.error('Error loading cached dictation:', err);
+        }
+      }
+    }
+
+    // Load cached data on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadCachedData();
+    });
+
     document.getElementById('minHrsFilter').addEventListener('input', applyFilter);
   </script>
 </body>
 
 </html>
-
