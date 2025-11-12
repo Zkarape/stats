@@ -78,6 +78,9 @@
       background: white; padding: 1.5rem; border-radius: 12px;
       box-shadow: var(--shadow); margin: 1.5rem 0; border: 1px solid var(--border);
     }
+    .dept-toggle { transition: transform 0.2s; }
+    .dept-toggle::before { content: 'Down Arrow'; }
+    .users-container.open ~ .dept-header .dept-toggle::before { content: 'Up Arrow'; }
     .dictation-chart { background: #fef2f2; border: 1px solid #fecaca; }
     .loading, .error { text-align: center; padding: 2rem; border-radius: 12px; margin: 1rem 0; }
     .loading { color: #64748b; background: #f8fafc; }
@@ -266,47 +269,46 @@
       });
     }
 
-    function renderDepartments() {
-      const container = document.getElementById('departments');
-      container.innerHTML = '';
-      const sorted = Object.entries(departments)
-        .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
-    
-      sorted.forEach(([dept, data]) => {
-        const avgWasted = data.avgWastedHrsPerDoc.toFixed(1);
-        const deptCard = document.createElement('div');
-        deptCard.className = 'dept-card';
-        deptCard.innerHTML = `
-          <div class="dept-header" onclick="toggleUsers('${dept}')">
-            <div>
-              <div class="dept-name">${dept}</div>
-              <div class="dept-metric" style="color:var(--danger)">~${data.totalWastedHrs.toFixed(1)} wasted hrs/day</div>
-              <div class="dept-subtext" style="color:#6b7280; font-size:0.95rem;">
-                ${avgWasted} hrs/doctor • ${data.activeCount} active doctor${data.activeCount !== 1 ? 's' : ''}
-              </div>
-              <div class="dept-subtext">
-                ${data.total.toLocaleString('en', {maximumFractionDigits: 0})} chars total
-              </div>
-            </div>
-            <div class="dept-toggle">Down Arrow</div>
-          </div>
-          <div id="users-${dept}" class="users-container"></div>
-        `;
-        container.appendChild(deptCard);
-      });
-    }
+function renderDepartments() {
+  const container = document.getElementById('departments');
+  container.innerHTML = '';
+  const sorted = Object.entries(departments)
+    .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
 
+  sorted.forEach(([dept, data]) => {
+    const avgWasted = data.avgWastedHrsPerDoc.toFixed(1);
+    const avgChars = data.avgCharsPerDoc.toFixed(0);
+    const deptCard = document.createElement('div');
+    deptCard.className = 'dept-card';
+    deptCard.innerHTML = `
+      <div class="dept-header" onclick="toggleUsers('${dept}')">
+        <div>
+          <div class="dept-name">${dept}</div>
+          <div class="dept-metric" style="color:var(--danger)">~${data.totalWastedHrs.toFixed(1)} wasted hrs/day</div>
+          <div class="dept-subtext" style="color:#6b7280; font-size:0.95rem;">
+            ${avgWasted} hrs/doctor • ${data.activeCount} active
+          </div>
+          <div class="dept-subtext">
+            ${data.total.toLocaleString()} chars • ${avgChars} avg/doctor
+          </div>
+        </div>
+        <div class="dept-toggle">Down Arrow</div>
+      </div>
+      <div id="users-${dept}" class="users-container"></div>
+    `;
+    container.appendChild(deptCard);
+  });
+}
+    
 function toggleUserActive(dept, user) {
   const data = departments[dept];
   const wasActive = user.isActive;
 
   if (wasActive) {
-    // Exclude
     user.isActive = false;
     data.total -= user.originalChars;
     data.activeCount -= 1;
   } else {
-    // Include
     user.isActive = true;
     data.total += user.originalChars;
     data.activeCount += 1;
@@ -315,26 +317,31 @@ function toggleUserActive(dept, user) {
   // Recalculate
   data.totalWastedHrs = data.total / CHARS_PER_HOUR_TYPED;
   data.avgWastedHrsPerDoc = data.activeCount > 0 ? data.totalWastedHrs / data.activeCount : 0;
+  data.avgCharsPerDoc = data.activeCount > 0 ? data.total / data.activeCount : 0;
 
-  // Re-render everything
-  renderDepartments();
-  renderUserSection(dept);
-  renderDeptChart();
+  // Update only what changed
+  renderDepartments();     // Updates per-doctor hrs in grey
+  renderUserSection(dept); // Updates list + chart
+  renderDeptChart();       // Updates top chart
 }
-
+    
 window.toggleUsers = function(dept) {
-      const container = document.getElementById(`users-${dept}`);
-      const isOpen = container.classList.toggle('open');
-      const toggle = container.parentElement.querySelector('.dept-toggle');
-      toggle.textContent = isOpen ? '▲' : '▼';
-      if (isOpen && !container.dataset.rendered) {
-        renderUserSection(dept);
-        container.dataset.rendered = 'true';
-      }
-    };
+  const container = document.getElementById(`users-${dept}`);
+  const isOpen = container.classList.toggle('open');
+  const toggle = container.parentElement.querySelector('.dept-toggle');
+  toggle.textContent = isOpen ? 'Up Arrow' : 'Down Arrow';
+
+  if (isOpen && !container.dataset.rendered) {
+    renderUserSection(dept);
+    container.dataset.rendered = 'true';
+  }
+};
     
 function renderUserSection(dept) {
   const container = document.getElementById(`users-${dept}`);
+  const wasOpen = container.classList.contains('open');
+  const scrollY = window.scrollY;  // Save scroll
+
   const state = sortStates[dept];
   let users = [...departments[dept].users];
 
@@ -366,12 +373,14 @@ function renderUserSection(dept) {
     const item = document.createElement('div');
     item.className = 'user-item';
     item.style.transition = 'all 0.3s ease';
-    item.onclick = () => toggleUserActive(dept, user);
+    item.onclick = (e) => {
+      e.stopPropagation(); // Prevent header click
+      toggleUserActive(dept, user);
+    };
 
     if (!user.isActive) {
       item.style.opacity = '0.35';
       item.style.filter = 'blur(1.2px)';
-      item.style.pointerEvents = 'auto';
       item.title = 'Click to include';
     } else {
       item.style.opacity = '1';
@@ -390,7 +399,16 @@ function renderUserSection(dept) {
     list.appendChild(item);
   });
 
+  // Restore open state
+  if (wasOpen) {
+    container.classList.add('open');
+    container.parentElement.querySelector('.dept-toggle').textContent = 'Up Arrow';
+  }
+
   renderUserChart(dept, users.filter(u => u.isActive));
+
+  // Restore scroll
+  window.scrollTo(0, scrollY);
 }
     
 function renderUserChart(dept, allUsers) {
@@ -563,4 +581,5 @@ function renderDeptChart() {
   </script>
 </body>
 </html>
+
 
