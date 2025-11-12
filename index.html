@@ -321,6 +321,17 @@ function toggleUserActive(dept, user) {
   renderUserSection(dept);
   renderDeptChart();
 }
+
+window.toggleUsers = function(dept) {
+      const container = document.getElementById(`users-${dept}`);
+      const isOpen = container.classList.toggle('open');
+      const toggle = container.parentElement.querySelector('.dept-toggle');
+      toggle.textContent = isOpen ? '▲' : '▼';
+      if (isOpen && !container.dataset.rendered) {
+        renderUserSection(dept);
+        container.dataset.rendered = 'true';
+      }
+    };
     
 function renderUserSection(dept) {
   const container = document.getElementById(`users-${dept}`);
@@ -552,3 +563,4 @@ function renderDeptChart() {
   </script>
 </body>
 </html>
+
