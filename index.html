@@ -17,7 +17,6 @@
     header { text-align: center; margin-bottom: 2rem; }
     h1 { color: var(--primary); font-size: 2rem; margin: 0 0 0.5rem; }
     .subtitle { color: #64748b; font-size: 1rem; }
-
     .controls {
       display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;
       justify-content: center; align-items: center;
@@ -29,12 +28,12 @@
     select { min-width: 200px; background: white; }
     button { background: var(--primary); color: white; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); }
     button:hover { background: #2563eb; transform: translateY(-1px); }
-
+    .dictation-btn { background: var(--danger); }
+    .dictation-btn:hover { background: #dc2626; }
     .view-toggle {
       display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: #475569;
     }
     .view-toggle label { cursor: pointer; }
-
     .dept-card {
       background: var(--card); border-radius: 12px; padding: 1.5rem;
       box-shadow: var(--shadow); border: 1px solid var(--border);
@@ -46,20 +45,16 @@
     }
     .dept-name { font-weight: 700; font-size: 1.3rem; color: var(--primary); }
     .dept-toggle { font-size: 1.2rem; color: var(--accent); }
-
     .dept-metric {
       font-size: 1.6rem; font-weight: 800; margin: 0.5rem 0;
     }
     .dept-subtext { font-size: 0.9rem; color: #64748b; }
-
     .sort-controls {
       display: flex; gap: 0.5rem; margin: 1rem 0; font-size: 0.85rem;
     }
     .sort-controls select { font-size: 0.8rem; padding: 0.3rem 0.6rem; }
-
     .users-container { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: none; }
     .users-container.open { display: block; }
-
     .user-list {
       margin-bottom: 1.5rem;
     }
@@ -70,56 +65,67 @@
     }
     .user-name { font-weight: 600; color: var(--text); }
     .user-metric { font-weight: 700; font-size: 1rem; }
-
+    .dictation-container {
+      background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0;
+    }
+    .dictation-title { color: var(--danger); font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; text-align: center; }
+    .dictation-item {
+      background: #fee2e2; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid #fecaca;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .dictation-metric { font-weight: 700; font-size: 1rem; color: var(--danger); }
     .chart-container {
       background: white; padding: 1.5rem; border-radius: 12px;
       box-shadow: var(--shadow); margin: 1.5rem 0; border: 1px solid var(--border);
     }
-
+    .dictation-chart { background: #fef2f2; border: 1px solid #fecaca; }
     .loading, .error { text-align: center; padding: 2rem; border-radius: 12px; margin: 1rem 0; }
     .loading { color: #64748b; background: #f8fafc; }
     .error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-
     .footer { text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: 3rem; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <h1>Productivity Dashboard</h1>
-      <p class="subtitle">All time in HOURS • Red = Wasted Time at 20 WPM</p>
+      <p class="subtitle" id="subtitle">All time in HOURS • Red = Wasted Time at 20 WPM</p>
     </header>
-
     <div class="controls">
       <button onclick="loadData()">Refresh Data</button>
+      <button id="dictationToggle" onclick="toggleDictation()" style="display:none;">Show Dictation Data</button>
     </div>
-
     <div id="loading" class="loading">Click "Refresh Data" to load...</div>
     <div id="error" class="error" style="display:none;"></div>
-
     <div id="chartContainer" class="chart-container" style="display:none;">
       <canvas id="deptChart"></canvas>
     </div>
-
     <div id="departments"></div>
-
+    <div id="dictationSection" class="dictation-container hidden">
+      <h2 class="dictation-title">Dictation Data (Chars/Day)</h2>
+      <div id="dictationList"></div>
+      <div class="chart-container dictation-chart">
+        <canvas id="dictationChart"></canvas>
+      </div>
+    </div>
     <div class="footer">
       Manual refresh only • 1 hr saved per 60,000 chars • Typing: 20 WPM
     </div>
   </div>
-
   <script>
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
+    const DICTATION_URL = DATA_URL + "dictation";  // New Lambda endpoint for dictation
     const CHARS_PER_HOUR_SAVED = 60_000;
     const TYPING_SPEED_WPM = 20;
     const CHARS_PER_WORD = 5;
     const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60; // 6,000
-
-    let rawData = [];
+    let rawDataTyping = [];  // Cached typing data
+    let rawDataDictation = [];  // Cached dictation data
     let departments = {};
     let userCharts = {};
     let sortStates = {};
-    let showBoth = false;
+    let isDictationVisible = false;
 
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
@@ -146,19 +152,16 @@
       const error = document.getElementById('error');
       const deptsDiv = document.getElementById('departments');
       const chartContainer = document.getElementById('chartContainer');
-
       loading.style.display = 'block';
-      loading.textContent = 'Loading data...';
+      loading.textContent = 'Loading typing data...';
       error.style.display = 'none';
       deptsDiv.innerHTML = '';
       chartContainer.style.display = 'none';
-
       try {
         const res = await fetch(DATA_URL + '?t=' + Date.now());
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const text = await res.text();
-
-        rawData = text.trim().split('\n')
+        rawDataTyping = text.trim().split('\n')
           .map(l => l.trim())
           .filter(l => l.includes('|'))
           .map(l => {
@@ -170,14 +173,13 @@
             return { hostname, chars, original: hostPart };
           })
           .filter(Boolean);
-
         processData();
         renderDepartments();
         renderDeptChart();
-
         loading.style.display = 'none';
         chartContainer.style.display = 'block';
-
+        document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
+        document.getElementById('dictationToggle').style.display = 'inline-block';
       } catch (err) {
         loading.style.display = 'none';
         error.style.display = 'block';
@@ -185,9 +187,38 @@
       }
     }
 
+    async function loadDictationData() {
+      const loading = document.getElementById('loading');
+      loading.style.display = 'block';
+      loading.textContent = 'Loading dictation data...';
+      try {
+        const res = await fetch(DICTATION_URL + '?t=' + Date.now());
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        rawDataDictation = text.trim().split('\n')
+          .map(l => l.trim())
+          .filter(l => l.includes('|'))
+          .map(l => {
+            const [hostPart, avgPart] = l.split('|').map(s => s.trim());
+            const hostname = hostPart.split(' ')[0].toLowerCase();
+            const match = avgPart.match(/([\d,]+\.?\d*)/);
+            if (!match) return null;
+            const chars = parseFloat(match[1].replace(/,/g, ''));
+            return { hostname, chars, original: hostPart };
+          })
+          .filter(Boolean);
+        renderDictationData();
+        loading.style.display = 'none';
+      } catch (err) {
+        loading.style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').textContent = `Error loading dictation: ${err.message}`;
+      }
+    }
+
     function processData() {
       departments = {};
-      rawData.forEach(item => {
+      rawDataTyping.forEach(item => {
         const dept = extractDepartment(item.hostname);
         if (!departments[dept]) {
           departments[dept] = { users: [], total: 0, count: 0 };
@@ -197,7 +228,6 @@
         departments[dept].total += item.chars;
         departments[dept].count += 1;
       });
-
       Object.keys(departments).forEach(dept => {
         const totalChars = departments[dept].total;
         departments[dept].totalSavedHrs = totalChars / CHARS_PER_HOUR_SAVED;
@@ -208,10 +238,8 @@
     function renderDepartments() {
       const container = document.getElementById('departments');
       container.innerHTML = '';
-
       const sorted = Object.entries(departments)
         .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
-
       sorted.forEach(([dept, data]) => {
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
@@ -221,7 +249,7 @@
               <div class="dept-name">${dept}</div>
               <div class="dept-metric" style="color:var(--danger)">~${data.totalWastedHrs.toFixed(1)} wasted hrs/day</div>
               <div class="dept-subtext">
-                ${data.count} user${data.count > 1 ? 's' : ''} • 
+                ${data.count} user${data.count > 1 ? 's' : ''} •
                 ${data.total.toLocaleString('en', {maximumFractionDigits: 0})} chars total
               </div>
             </div>
@@ -238,7 +266,6 @@
       const isOpen = container.classList.toggle('open');
       const toggle = container.parentElement.querySelector('.dept-toggle');
       toggle.textContent = isOpen ? '▲' : '▼';
-
       if (isOpen && !container.dataset.rendered) {
         renderUserSection(dept);
         container.dataset.rendered = 'true';
@@ -249,13 +276,11 @@
       const container = document.getElementById(`users-${dept}`);
       const state = sortStates[dept];
       let users = [...departments[dept].users];
-
       users.sort((a, b) => {
         const valA = a.chars;
         const valB = b.chars;
         return state.dir === 'desc' ? valB - valA : valA - valB;
       });
-
       container.innerHTML = `
         <div class="sort-controls">
           <select onchange="updateSort('${dept}', 'type', this.value)">
@@ -267,44 +292,36 @@
             <option value="asc">Ascending</option>
           </select>
         </div>
-
         <div class="user-list" id="user-list-${dept}"></div>
-
         <div class="chart-container">
           <canvas id="user-chart-${dept}"></canvas>
         </div>
       `;
-
       const list = document.getElementById(`user-list-${dept}`);
       users.forEach(user => {
         const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
-
         const item = document.createElement('div');
         item.className = 'user-item';
         item.innerHTML = `
           <div class="user-name">${user.original}</div>
           <div class="user-metric">
-            ${user.chars.toLocaleString()} chars • 
+            ${user.chars.toLocaleString()} chars •
             <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs wasted</span>
           </div>
         `;
         list.appendChild(item);
       });
-
       renderUserChart(dept, users);
     }
 
     function renderUserChart(dept, users) {
       const canvasId = `user-chart-${dept}`;
       const ctx = document.getElementById(canvasId).getContext('2d');
-
       const labels = users.map(u => u.original.split(' ')[0]);
       const wastedData = users.map(u => u.chars / CHARS_PER_HOUR_TYPED);
-
       if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
         userCharts[dept].destroy();
       }
-
       userCharts[dept] = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -351,14 +368,11 @@
       const ctx = document.getElementById('deptChart').getContext('2d');
       const sorted = Object.entries(departments)
         .sort((a, b) => b[1].totalWastedHrs - a[1].totalWastedHrs);
-
       const labels = sorted.map(([d]) => d);
       const wastedData = sorted.map(([, d]) => d.totalWastedHrs);
-
       if (window.deptChart && typeof window.deptChart.destroy === 'function') {
         window.deptChart.destroy();
       }
-
       window.deptChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -374,6 +388,100 @@
           scales: {
             x: { beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
             y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // New: Toggle dictation view
+    window.toggleDictation = function() {
+      const btn = document.getElementById('dictationToggle');
+      const deptsDiv = document.getElementById('departments');
+      const chartContainer = document.getElementById('chartContainer');
+      const dictationSection = document.getElementById('dictationSection');
+      const subtitle = document.getElementById('subtitle');
+
+      if (isDictationVisible) {
+        // Hide dictation, show typing
+        dictationSection.classList.add('hidden');
+        deptsDiv.classList.remove('hidden');
+        chartContainer.style.display = 'block';
+        btn.textContent = 'Show Dictation Data';
+        btn.classList.remove('dictation-btn');
+        subtitle.textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
+        isDictationVisible = false;
+      } else {
+        // Show dictation, hide typing
+        if (rawDataDictation.length === 0) {
+          loadDictationData();
+        } else {
+          renderDictationData();
+        }
+        deptsDiv.classList.add('hidden');
+        chartContainer.style.display = 'none';
+        dictationSection.classList.remove('hidden');
+        btn.textContent = 'Hide Dictation Data';
+        btn.classList.add('dictation-btn');
+        subtitle.textContent = 'Dictation Data • Red = Saved Time via Dictation';
+        isDictationVisible = true;
+      }
+    };
+
+    // New: Render dictation list and chart
+    function renderDictationData() {
+      const list = document.getElementById('dictationList');
+      const sortedData = [...rawDataDictation].sort((a, b) => b.chars - a.chars);
+      list.innerHTML = '';
+      sortedData.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'dictation-item';
+        div.innerHTML = `
+          <div class="user-name">${item.original}</div>
+          <div class="dictation-metric">${item.chars.toLocaleString()} chars/day</div>
+        `;
+        list.appendChild(div);
+      });
+      renderDictationChart(sortedData);
+    }
+
+    // New: Dictation chart (top 10 users, horizontal bar)
+    function renderDictationChart(data) {
+      const topData = data.slice(0, 10);
+      const ctx = document.getElementById('dictationChart').getContext('2d');
+      const labels = topData.map(u => u.original.split(' ')[0]);
+      const charsData = topData.map(u => u.chars);
+      if (window.dictationChart && typeof window.dictationChart.destroy === 'function') {
+        window.dictationChart.destroy();
+      }
+      window.dictationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Daily Chars (Dictated)',
+              data: charsData,
+              backgroundColor: 'rgba(239, 68, 68, 0.8)',
+              borderColor: 'rgba(239, 68, 68, 1)',
+              borderWidth: 1,
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} chars/day` } }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              title: { display: true, text: 'Chars per Day' }
+            },
+            y: {
+              grid: { display: false }
+            }
           }
         }
       });
