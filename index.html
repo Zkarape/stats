@@ -129,9 +129,27 @@
 
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
+    
+      // -----------------------------------------------------------------
+      // 1. Cardiology sub-groups (each gets its own department)
+      // -----------------------------------------------------------------
+      if (lower.includes('cardiopulm'))  return 'Cardio-Pulm';
+      if (lower.includes('cardiobit'))   return 'Cardio-Bit';
+      if (lower.includes('cardiodoc'))   return 'Cardio-Doc';
+      if (lower.includes('cardiopost'))  return 'Cardio-Post';
+      // Mcardio → Cardio-Pulm (as requested)
+      if (lower.includes('mcardio'))     return 'Cardio-Pulm';
+    
+      // -----------------------------------------------------------------
+      // 2. Existing generic cardiology (fallback)
+      // -----------------------------------------------------------------
+      if (lower.includes('cardio'))      return 'Cardiology';
+    
+      // -----------------------------------------------------------------
+      // 3. All other departments (unchanged)
+      // -----------------------------------------------------------------
       const map = {
         'x-ray': 'X-Ray', 'xray': 'X-Ray',
-        'cardio': 'Cardiology',
         'mrt': 'MRT', 'mrtdoc': 'MRT',
         'emerg': 'Emergency', 'emergp': 'Emergency',
         'ortho': 'Orthopedics', 'orthopedy': 'Orthopedics',
@@ -144,9 +162,13 @@
       for (const [key, name] of Object.entries(map)) {
         if (lower.includes(key)) return name;
       }
+    
+      // -----------------------------------------------------------------
+      // 4. Default – first word before digits/dashes
+      // -----------------------------------------------------------------
       return hostname.split(/[\d-]/)[0].replace(/\b\w/g, c => c.toUpperCase());
     }
-
+    
     async function loadData() {
       const loading = document.getElementById('loading');
       const error = document.getElementById('error');
@@ -489,4 +511,5 @@
   </script>
 </body>
 </html>
+
 
