@@ -18,6 +18,7 @@
       --border: #e2e8f0;
       --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       --accent: #6366f1;
+      --trust-blue: #0ea5e9;
     }
 
     * {
@@ -98,6 +99,14 @@
       background: #dc2626;
     }
 
+    .savings-btn {
+      background: var(--trust-blue);
+    }
+
+    .savings-btn:hover {
+      background: #0284c7;
+    }
+
     .view-toggle {
       display: flex;
       align-items: center;
@@ -153,6 +162,61 @@
       color: #64748b;
     }
 
+    .savings-info {
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+      border: 2px solid var(--trust-blue);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .savings-info.visible {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .savings-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .savings-icon {
+      font-size: 1.5rem;
+    }
+
+    .savings-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--trust-blue);
+    }
+
+    .savings-metric {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--trust-blue);
+      margin: 0.25rem 0;
+    }
+
+    .savings-subtext {
+      font-size: 0.85rem;
+      color: #0369a1;
+      font-weight: 500;
+    }
+
     .sort-controls {
       display: flex;
       gap: 0.5rem;
@@ -199,6 +263,13 @@
     .user-metric {
       font-weight: 700;
       font-size: 1rem;
+    }
+
+    .user-savings {
+      color: var(--trust-blue);
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
     }
 
     .dictation-container {
@@ -327,6 +398,46 @@
     .calculator-result strong {
       color: var(--text);
     }
+
+    .savings-banner {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      color: white;
+      padding: 1.25rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.3);
+      display: none;
+    }
+
+    .savings-banner.visible {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    .savings-banner-content {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .savings-stat {
+      text-align: center;
+    }
+
+    .savings-stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .savings-stat-label {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      font-weight: 500;
+    }
   </style>
 </head>
 
@@ -338,7 +449,25 @@
     </header>
     <div class="controls">
       <button onclick="loadData()">Refresh Data</button>
+      <button id="savingsToggle" onclick="toggleSavings()" style="display:none;" class="savings-btn">Show Potential Savings</button>
       <button id="dictationToggle" onclick="toggleDictation()" style="display:none;">Show Dictation Data</button>
+    </div>
+
+    <div id="savingsBanner" class="savings-banner">
+      <div class="savings-banner-content">
+        <div class="savings-stat">
+          <span class="savings-stat-value" id="totalSavings">0</span>
+          <span class="savings-stat-label">Total Hours Saved/Day</span>
+        </div>
+        <div class="savings-stat">
+          <span class="savings-stat-value">3x</span>
+          <span class="savings-stat-label">Faster with Dictation</span>
+        </div>
+        <div class="savings-stat">
+          <span class="savings-stat-value" id="savingsPercent">0%</span>
+          <span class="savings-stat-label">Time Reduction</span>
+        </div>
+      </div>
     </div>
 
     <div id="filterPanel" class="calculator-panel" style="display:none; margin-top:1.5rem;">
@@ -386,6 +515,7 @@
     const TYPING_SPEED_WPM = 16;
     const CHARS_PER_WORD = 5;
     const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60;
+    const DICTATION_SPEEDUP = 3; // 3x faster
     const STORAGE_KEY_TYPING = 'productivity_typing_data';
     const STORAGE_KEY_DICTATION = 'productivity_dictation_data';
     const STORAGE_KEY_TIMESTAMP = 'productivity_data_timestamp';
@@ -395,6 +525,7 @@
     let userCharts = {};
     let sortStates = {};
     let isDictationVisible = false;
+    let isSavingsVisible = false;
     let currentMinHrs = 0;
 
     function extractDepartment(hostname) {
@@ -452,7 +583,6 @@
           })
           .filter(Boolean);
         
-        // Save to localStorage
         localStorage.setItem(STORAGE_KEY_TYPING, JSON.stringify(rawDataTyping));
         localStorage.setItem(STORAGE_KEY_TIMESTAMP, new Date().toISOString());
         
@@ -466,7 +596,9 @@
         chartContainer.style.display = 'block';
         document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
         document.getElementById('dictationToggle').style.display = 'inline-block';
+        document.getElementById('savingsToggle').style.display = 'inline-block';
         updateLastRefreshTime();
+        updateSavingsBanner();
       } catch (err) {
         loading.style.display = 'none';
         error.style.display = 'block';
@@ -495,7 +627,6 @@
           })
           .filter(Boolean);
         
-        // Save to localStorage
         localStorage.setItem(STORAGE_KEY_DICTATION, JSON.stringify(rawDataDictation));
         
         renderDictationData();
@@ -532,18 +663,17 @@
         d.totalWastedHrs = d.total / CHARS_PER_HOUR_TYPED;
         d.avgWastedHrsPerDoc = d.activeCount > 0 ? d.totalWastedHrs / d.activeCount : 0;
         d.avgCharsPerDoc = d.activeCount > 0 ? d.total / d.activeCount : 0;
+        d.potentialSavingsHrs = d.totalWastedHrs * (1 - 1/DICTATION_SPEEDUP);
       });
     }
 
     function getFilteredDepartments() {
       const filtered = Object.entries(departments)
         .filter(([deptName, data]) => {
-          // Round to 1 decimal place for comparison to avoid floating point issues
           const deptHrs = Math.round(data.avgWastedHrsPerDoc * 10) / 10;
           const threshold = Math.round(currentMinHrs * 10) / 10;
           const meetsThreshold = deptHrs >= threshold;
           
-          // Debug logging
           if (currentMinHrs > 0) {
             console.log(`${deptName}: ${deptHrs.toFixed(1)} hrs/doc (threshold: ${threshold.toFixed(1)}) ${meetsThreshold ? '✓' : '✗'}`);
           }
@@ -562,6 +692,22 @@
       filtered.forEach(([dept, data]) => {
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
+        
+        const savingsHTML = isSavingsVisible ? `
+          <div class="savings-info visible">
+            <div class="savings-header">
+              <span class="savings-icon">⚡</span>
+              <span class="savings-title">Dictation Potential</span>
+            </div>
+            <div class="savings-metric">
+              ~${data.potentialSavingsHrs.toFixed(1)} hrs/day saved
+            </div>
+            <div class="savings-subtext">
+              By switching to dictation (3x faster), this department could save ${((1 - 1/DICTATION_SPEEDUP) * 100).toFixed(0)}% of wasted time
+            </div>
+          </div>
+        ` : '';
+
         deptCard.innerHTML = `
           <div class="dept-header" onclick="toggleUsers('${dept}')">
             <div>
@@ -576,6 +722,7 @@
                 ${data.activeCount} active doctor${data.activeCount !== 1 ? 's' : ''} •
                 ${data.total.toLocaleString()} chars total
               </div>
+              ${savingsHTML}
             </div>
             <div class="dept-toggle">▼</div>
           </div>
@@ -632,6 +779,7 @@
       const list = document.getElementById(`user-list-${dept}`);
       users.forEach(user => {
         const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
+        const savedHrs = wastedHrs * (1 - 1/DICTATION_SPEEDUP);
         const item = document.createElement('div');
         item.className = 'user-item';
         item.style.transition = 'all 0.3s ease';
@@ -650,12 +798,17 @@
           item.title = 'Click to exclude';
         }
 
+        const savingsHTML = isSavingsVisible && user.isActive ? `
+          <span class="user-savings">→ Save ${savedHrs.toFixed(1)} hrs with dictation</span>
+        ` : '';
+
         item.innerHTML = `
           <div class="user-name">${user.original}</div>
           <div class="user-metric">
             ${user.chars.toLocaleString()} chars •
             <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs</span>
             ${!user.isActive ? ' <em style="color:#9ca3af">(click to include)</em>' : ''}
+            ${savingsHTML}
           </div>
         `;
         list.appendChild(item);
@@ -676,22 +829,35 @@
       const ctx = document.getElementById(canvasId).getContext('2d');
       const labels = activeUsers.map(u => u.original.split(' ')[0]);
       const wastedData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
+      const savedData = isSavingsVisible ? activeUsers.map(u => (u.chars / CHARS_PER_HOUR_TYPED) * (1 - 1/DICTATION_SPEEDUP)) : [];
 
       if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
         userCharts[dept].destroy();
+      }
+
+      const datasets = [{
+        label: 'Wasted Hours',
+        data: wastedData,
+        backgroundColor: 'rgba(239, 68, 68, 0.9)',
+        borderColor: 'rgba(239, 68, 68, 1)',
+        borderWidth: 1,
+      }];
+
+      if (isSavingsVisible) {
+        datasets.push({
+          label: 'Potential Savings (Dictation)',
+          data: savedData,
+          backgroundColor: 'rgba(14, 165, 233, 0.9)',
+          borderColor: 'rgba(14, 165, 233, 1)',
+          borderWidth: 1,
+        });
       }
 
       userCharts[dept] = new Chart(ctx, {
         type: 'bar',
         data: {
           labels,
-          datasets: [{
-            label: 'Wasted Hours',
-            data: wastedData,
-            backgroundColor: 'rgba(239, 68, 68, 0.9)',
-            borderColor: 'rgba(239, 68, 68, 1)',
-            borderWidth: 1,
-          }]
+          datasets
         },
         options: {
           indexAxis: 'y',
@@ -713,10 +879,9 @@
       const value = input.value.trim();
       const newMinHrs = (value === '' || isNaN(value)) ? 0 : parseFloat(value);
       
-      // Only re-render if the value actually changed
       if (newMinHrs !== currentMinHrs) {
         currentMinHrs = newMinHrs;
-        console.log('Filter applied:', currentMinHrs); // Debug
+        console.log('Filter applied:', currentMinHrs);
         renderDepartments();
         renderDeptChart();
       }
@@ -727,23 +892,36 @@
       const filtered = getFilteredDepartments();
 
       const labels = filtered.map(([d]) => d);
-      const data = filtered.map(([, d]) => d.totalWastedHrs);
+      const wastedData = filtered.map(([, d]) => d.totalWastedHrs);
+      const savedData = isSavingsVisible ? filtered.map(([, d]) => d.potentialSavingsHrs) : [];
 
       if (window.deptChart && typeof window.deptChart.destroy === 'function') {
         window.deptChart.destroy();
+      }
+
+      const datasets = [{ 
+        label: 'Wasted Hours', 
+        data: wastedData, 
+        backgroundColor: 'rgba(239,68,68,0.9)', 
+        borderColor: 'rgba(239,68,68,1)', 
+        borderWidth: 1 
+      }];
+
+      if (isSavingsVisible) {
+        datasets.push({
+          label: 'Potential Savings (Dictation)',
+          data: savedData,
+          backgroundColor: 'rgba(14, 165, 233, 0.9)',
+          borderColor: 'rgba(14, 165, 233, 1)',
+          borderWidth: 1
+        });
       }
 
       window.deptChart = new Chart(ctx, {
         type: 'bar',
         data: { 
           labels, 
-          datasets: [{ 
-            label: 'Wasted Hours', 
-            data, 
-            backgroundColor: 'rgba(239,68,68,0.9)', 
-            borderColor: 'rgba(239,68,68,1)', 
-            borderWidth: 1 
-          }] 
+          datasets 
         },
         options: {
           indexAxis: 'y',
@@ -757,6 +935,36 @@
       });
     }
 
+    window.toggleSavings = function() {
+      const btn = document.getElementById('savingsToggle');
+      const banner = document.getElementById('savingsBanner');
+      
+      isSavingsVisible = !isSavingsVisible;
+      
+      if (isSavingsVisible) {
+        btn.textContent = 'Hide Potential Savings';
+        btn.classList.add('savings-btn');
+        banner.classList.add('visible');
+        document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Wasted Time • Blue = Potential Savings with Dictation (3x faster)';
+      } else {
+        btn.textContent = 'Show Potential Savings';
+        btn.classList.add('savings-btn');
+        banner.classList.remove('visible');
+        document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
+      }
+      
+      renderDepartments();
+      renderDeptChart();
+      
+      // Re-render any open user sections
+      Object.keys(departments).forEach(dept => {
+        const container = document.getElementById(`users-${dept}`);
+        if (container && container.classList.contains('open')) {
+          renderUserSection(dept);
+        }
+      });
+    };
+
     window.toggleDictation = function () {
       const btn = document.getElementById('dictationToggle');
       const deptsDiv = document.getElementById('departments');
@@ -764,15 +972,23 @@
       const dictationSection = document.getElementById('dictationSection');
       const subtitle = document.getElementById('subtitle');
       const filterPanel = document.getElementById('filterPanel');
+      const savingsBtn = document.getElementById('savingsToggle');
+      const savingsBanner = document.getElementById('savingsBanner');
 
       if (isDictationVisible) {
         dictationSection.classList.add('hidden');
         deptsDiv.classList.remove('hidden');
         chartContainer.style.display = 'block';
         filterPanel.style.display = 'block';
+        savingsBtn.style.display = 'inline-block';
+        if (isSavingsVisible) {
+          savingsBanner.classList.add('visible');
+          subtitle.textContent = 'All time in HOURS • Red = Wasted Time • Blue = Potential Savings with Dictation (3x faster)';
+        } else {
+          subtitle.textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
+        }
         btn.textContent = 'Show Dictation Data';
         btn.classList.remove('dictation-btn');
-        subtitle.textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
         isDictationVisible = false;
       } else {
         if (rawDataDictation.length === 0) {
@@ -783,6 +999,8 @@
         deptsDiv.classList.add('hidden');
         chartContainer.style.display = 'none';
         filterPanel.style.display = 'none';
+        savingsBtn.style.display = 'none';
+        savingsBanner.classList.remove('visible');
         dictationSection.classList.remove('hidden');
         btn.textContent = 'Hide Dictation Data';
         btn.classList.add('dictation-btn');
@@ -864,6 +1082,22 @@
       document.getElementById('deptPlural').textContent = visibleDepts === 1 ? '' : 's';
     }
 
+    function updateSavingsBanner() {
+      const filtered = getFilteredDepartments();
+      let totalSavings = 0;
+      let totalWasted = 0;
+
+      filtered.forEach(([_, dept]) => {
+        totalSavings += dept.potentialSavingsHrs;
+        totalWasted += dept.totalWastedHrs;
+      });
+
+      const savingsPercent = totalWasted > 0 ? ((totalSavings / totalWasted) * 100).toFixed(0) : 0;
+
+      document.getElementById('totalSavings').textContent = totalSavings.toFixed(1);
+      document.getElementById('savingsPercent').textContent = savingsPercent + '%';
+    }
+
     window.updateSort = function(dept, field, value) {
       sortStates[dept][field] = value;
       renderUserSection(dept);
@@ -885,10 +1119,12 @@
       
       deptData.totalWastedHrs = deptData.total / CHARS_PER_HOUR_TYPED;
       deptData.avgWastedHrsPerDoc = deptData.activeCount > 0 ? deptData.totalWastedHrs / deptData.activeCount : 0;
+      deptData.potentialSavingsHrs = deptData.totalWastedHrs * (1 - 1/DICTATION_SPEEDUP);
       
       renderUserSection(dept);
       renderDepartments();
       renderDeptChart();
+      updateSavingsBanner();
     };
 
     function updateLastRefreshTime() {
@@ -919,7 +1155,9 @@
           document.getElementById('loading').style.display = 'none';
           document.getElementById('chartContainer').style.display = 'block';
           document.getElementById('dictationToggle').style.display = 'inline-block';
+          document.getElementById('savingsToggle').style.display = 'inline-block';
           updateLastRefreshTime();
+          updateSavingsBanner();
         } catch (err) {
           console.error('Error loading cached data:', err);
         }
@@ -934,7 +1172,6 @@
       }
     }
 
-    // Load cached data on page load
     window.addEventListener('DOMContentLoaded', () => {
       loadCachedData();
     });
