@@ -343,26 +343,25 @@
       <button id="dictationToggle" onclick="toggleDictation()" style="display:none;">Show Dictation Data</button>
     </div>
 
-    <div class="calculator-panel">
-      <div class="calculator-title">Active Users & Departments Calculator</div>
-
-      <div class="calculator-row">
-        <label>Min wasted hrs/doctor:</label>
-        <input type="number" step="0.1" min="0" value="0.5" id="calcMinHrs">
-        <div class="calculator-result">
-          <span id="calcUserCount">—</span> active doctor<span id="s1">s</span>
-        </div>
+<div id="filterPanel" class="calculator-panel" style="display:none; margin-top:1.5rem;">
+  <div class="calculator-title">Department Filter by Avg Wasted Hrs/Doctor</div>
+  <div class="calculator-row" style="align-items:center; gap:1.5rem; flex-wrap:wrap;">
+    <div style="flex:1; min-width:200px;">
+      <label style="font-weight:600; display:block; margin-bottom:0.5rem;">
+        Show departments where average wasted time per doctor is ≥
+      </label>
+      <input type="number" step="0.1" min="0" value="0" placeholder="0" id="minHrsFilter" style="width:100%; max-width:120px; font-size:1.1rem; padding:0.6rem;">
+    </div>
+    <div style="display:flex; gap:2rem; font-size:1.1rem; font-weight:600; color:var(--text);">
+      <div>
+        <strong id="totalUsers">0</strong> total doctors
       </div>
-
-      <div class="calculator-row">
-        <label>Min wasted hrs/department:</label>
-        <input type="number" step="0.5" min="0" value="15" id="calcMinDeptHrs">
-        <div class="calculator-result">
-          <span id="calcDeptCount">—</span> department<span id="s2">s</span>
-        </div>
+      <div>
+        <strong id="activeDepts">0</strong> active department<span id="deptPlural">s</span>
       </div>
     </div>
-
+  </div>
+</div>
 
     <div id="loading" class="loading">Click "Refresh Data" to load...</div>
     <div id="error" class="error" style="display:none;"></div>
@@ -898,4 +897,5 @@
 </body>
 
 </html>
+
 
