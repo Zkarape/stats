@@ -729,25 +729,23 @@
     const CORRECT_PASSWORD = "erebuni2024";
     const AUTH_KEY = 'productivity_auth';
     
-    // Dictation users data (chars/day)
-    const DICTATION_USERS = {
-      'hamaspyur_ctomography': 19121.24,
-      'karine_ctomography': 18088.50,
-      'lusine_ctomography': 11931.9,
-      'eva_mrt': 11263.67,
-      'zhanna_mrt': 12370.8,
-      'hayk_ctomography': 4754.47,
-      'gayane_ctomography': 9581.0,
-      'vigen_ctomography': 6928.0,
-      'sveta_mrt': 3362.0,
-      'rima_mrt': 3428.0,
-      'eduard_mrt': 2138.5,
-      'margarita_ctomography': 1906.00,
-      'anush_cardio': 1805.0,
-      'mikhayil_mrt': 1250.0,
-      'davit_vascular': 628.00,
-      'susanna_ctomography': 0.00
-    };
+    // Dictation users data (chars/day) - these are the ONLY users for MRT and CT departments
+    const DICTATION_USERS = [
+      { name: 'Hamaspyur', dept: 'CT', chars: 19121.24 },
+      { name: 'Karine', dept: 'CT', chars: 18088.50 },
+      { name: 'Lusine', dept: 'CT', chars: 11931.9 },
+      { name: 'Eva', dept: 'MRT', chars: 11263.67 },
+      { name: 'Zhanna', dept: 'MRT', chars: 12370.8 },
+      { name: 'Hayk', dept: 'CT', chars: 4754.47 },
+      { name: 'Gayane', dept: 'CT', chars: 9581.0 },
+      { name: 'Vigen', dept: 'CT', chars: 6928.0 },
+      { name: 'Sveta', dept: 'MRT', chars: 3362.0 },
+      { name: 'Rima', dept: 'MRT', chars: 3428.0 },
+      { name: 'Eduard', dept: 'MRT', chars: 2138.5 },
+      { name: 'Margarita', dept: 'CT', chars: 1906.00 },
+      { name: 'Mikhayil', dept: 'MRT', chars: 1250.0 },
+      { name: 'Susanna', dept: 'CT', chars: 0.00 }
+    ];
     
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
     const DICTATION_URL = DATA_URL + "dictation";
@@ -986,7 +984,6 @@ function processData() {
       });
     }
 
-        
     function getFilteredDepartments() {
       const filtered = Object.entries(departments)
         .filter(([deptName, data]) => {
@@ -1568,4 +1565,3 @@ function processData() {
 </body>
 
 </html>
-
