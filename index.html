@@ -1,56 +1,4 @@
-function processData() {
-      departments = {};
-      rawDataTyping.forEach(item => {
-        const dept = extractDepartment(item.hostname);
-        
-        // Skip excluded departments
-        if (!dept) return;
-        
-        if (!departments[dept]) {
-          departments[dept] = { users: [], total: 0, count: 0, activeCount: 0, isDictation: isDictationDepartment(dept) };
-          sortStates[dept] = { type: 'avg', dir: 'desc' };
-        }
-        
-        item.originalChars = item.chars;
-        const userKey = getUserKey(item.original);
-        
-        // For MRT and CT departments, use dictation data
-        if (departments[dept].isDictation && DICTATION_USERS[userKey] !== undefined) {
-          item.dictationChars = DICTATION_USERS[userKey];
-          item.chars = item.dictationChars;
-          item.isDictationUser = true;
-        } else {
-          item.isDictationUser = false;
-        }
-        
-        departments[dept].users.push(item);
-        if (item.chars >= 2000) {
-          item.isActive = true;
-          departments[dept].total += item.chars;
-          departments[dept].count += 1;
-          departments[dept].activeCount += 1;
-        } else {
-          item.isActive = false;
-        }
-      });
-
-      Object.keys(departments).forEach(dept => {
-        const d = departments[dept];
-        if (d.isDictation) {
-          // For dictation departments, show time saved (current time with dictation)
-          d.currentTimeWithDictation = d.total / CHARS_PER_HOUR_TYPED;
-          d.wouldBeWastedTime = d.currentTimeWithDictation * DICTATION_SPEEDUP;
-          d.timeSaved = d.wouldBeWastedTime - d.currentTimeWithDictation;
-          d.avgCurrentTimePerDoc = d.activeCount > 0 ? d.currentTimeWithDictation / d.activeCount : 0;
-        } else {
-          // For typing departments, show wasted time
-          d.totalWastedHrs = d.total / CHARS_PER_HOUR_TYPED;
-          d.avgWastedHrsPerDoc = d.activeCount > 0 ? d.totalWastedHrs / d.activeCount : 0;
-          d.avgCharsPerDoc = d.activeCount > 0 ? d.total / d.activeCount : 0;
-          d.timeWithDictation = d.totalWastedHrs / DICTATION_SPEEDUP;
-        }
-      });
-    }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -984,10 +932,14 @@ function processData() {
       }
     }
 
-    function processData() {
+function processData() {
       departments = {};
       rawDataTyping.forEach(item => {
         const dept = extractDepartment(item.hostname);
+        
+        // Skip excluded departments
+        if (!dept) return;
+        
         if (!departments[dept]) {
           departments[dept] = { users: [], total: 0, count: 0, activeCount: 0, isDictation: isDictationDepartment(dept) };
           sortStates[dept] = { type: 'avg', dir: 'desc' };
@@ -1034,6 +986,7 @@ function processData() {
       });
     }
 
+        
     function getFilteredDepartments() {
       const filtered = Object.entries(departments)
         .filter(([deptName, data]) => {
@@ -1615,3 +1568,4 @@ function processData() {
 </body>
 
 </html>
+
