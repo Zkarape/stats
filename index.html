@@ -648,7 +648,7 @@
           autocomplete="off"
         >
         <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
-          👁️
+          👁
         </button>
       </div>
       <button class="login-btn" onclick="handleLogin()">Access Dashboard</button>
@@ -663,11 +663,10 @@
       </header>
       <div class="controls">
         <button onclick="loadData()">Refresh Data</button>
-        <button id="savingsToggle" onclick="toggleSavings()" style="display:none;" class="savings-btn">Show Potential Savings</button>
         <button id="dictationToggle" onclick="toggleDictation()" style="display:none;">Show Dictation Data</button>
       </div>
 
-      <div id="savingsBanner" class="savings-banner">
+      <div id="savingsBanner" class="savings-banner" style="display:none;">
         <div class="savings-banner-content">
           <div class="savings-stat">
             <span class="savings-stat-value" id="totalTimeAfter">0</span>
@@ -730,6 +729,26 @@
     const CORRECT_PASSWORD = "erebuni2024";
     const AUTH_KEY = 'productivity_auth';
     
+    // Dictation users data (chars/day)
+    const DICTATION_USERS = {
+      'hamaspyur_ctomography': 19121.24,
+      'karine_ctomography': 18088.50,
+      'lusine_ctomography': 11931.9,
+      'eva_mrt': 11263.67,
+      'zhanna_mrt': 12370.8,
+      'hayk_ctomography': 4754.47,
+      'gayane_ctomography': 9581.0,
+      'vigen_ctomography': 6928.0,
+      'sveta_mrt': 3362.0,
+      'rima_mrt': 3428.0,
+      'eduard_mrt': 2138.5,
+      'margarita_ctomography': 1906.00,
+      'anush_cardio': 1805.0,
+      'mikhayil_mrt': 1250.0,
+      'davit_vascular': 628.00,
+      'susanna_ctomography': 0.00
+    };
+    
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
     const DICTATION_URL = DATA_URL + "dictation";
     const CHARS_PER_HOUR_SAVED = 60_000;
@@ -747,7 +766,6 @@
     let userCharts = {};
     let sortStates = {};
     let isDictationVisible = false;
-    let isSavingsVisible = false;
     let currentMinHrs = 0;
 
     function handleLogin() {
@@ -779,16 +797,17 @@
       
       if (input.type === 'password') {
         input.type = 'text';
-        btn.textContent = '🙈';
+        btn.textContent = '👁';
       } else {
         input.type = 'password';
-        btn.textContent = '👁️';
+        btn.textContent = '👁';
       }
     }
 
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
 
+      if (lower.includes('ctomography')) return 'CT';
       if (lower.includes('cardiopulm')) return 'Cardio-Pulm';
       if (lower.includes('cardiobit')) return 'Cardio-Bit';
       if (lower.includes('cardiodoc')) return 'Cardio-Doc';
@@ -812,6 +831,14 @@
       }
 
       return hostname.split(/[\d-]/)[0].replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function isDictationDepartment(dept) {
+      return dept === 'MRT' || dept === 'CT';
+    }
+
+    function getUserKey(hostname) {
+      return hostname.toLowerCase().replace(/[\s-]/g, '_');
     }
 
     async function loadData() {
@@ -854,11 +881,9 @@
         renderDeptChart();
         loading.style.display = 'none';
         chartContainer.style.display = 'block';
-        document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
+        document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Wasted Time (Typing) • Green = Time Saved (Dictation)';
         document.getElementById('dictationToggle').style.display = 'inline-block';
-        document.getElementById('savingsToggle').style.display = 'inline-block';
         updateLastRefreshTime();
-        updateSavingsBanner();
       } catch (err) {
         loading.style.display = 'none';
         error.style.display = 'block';
@@ -903,10 +928,22 @@
       rawDataTyping.forEach(item => {
         const dept = extractDepartment(item.hostname);
         if (!departments[dept]) {
-          departments[dept] = { users: [], total: 0, count: 0, activeCount: 0 };
+          departments[dept] = { users: [], total: 0, count: 0, activeCount: 0, isDictation: isDictationDepartment(dept) };
           sortStates[dept] = { type: 'avg', dir: 'desc' };
         }
+        
         item.originalChars = item.chars;
+        const userKey = getUserKey(item.original);
+        
+        // For MRT and CT departments, use dictation data
+        if (departments[dept].isDictation && DICTATION_USERS[userKey] !== undefined) {
+          item.dictationChars = DICTATION_USERS[userKey];
+          item.chars = item.dictationChars;
+          item.isDictationUser = true;
+        } else {
+          item.isDictationUser = false;
+        }
+        
         departments[dept].users.push(item);
         if (item.chars >= 2000) {
           item.isActive = true;
@@ -920,10 +957,19 @@
 
       Object.keys(departments).forEach(dept => {
         const d = departments[dept];
-        d.totalWastedHrs = d.total / CHARS_PER_HOUR_TYPED;
-        d.avgWastedHrsPerDoc = d.activeCount > 0 ? d.totalWastedHrs / d.activeCount : 0;
-        d.avgCharsPerDoc = d.activeCount > 0 ? d.total / d.activeCount : 0;
-        d.timeWithDictation = d.totalWastedHrs / DICTATION_SPEEDUP;
+        if (d.isDictation) {
+          // For dictation departments, show time saved (current time with dictation)
+          d.currentTimeWithDictation = d.total / CHARS_PER_HOUR_TYPED;
+          d.wouldBeWastedTime = d.currentTimeWithDictation * DICTATION_SPEEDUP;
+          d.timeSaved = d.wouldBeWastedTime - d.currentTimeWithDictation;
+          d.avgCurrentTimePerDoc = d.activeCount > 0 ? d.currentTimeWithDictation / d.activeCount : 0;
+        } else {
+          // For typing departments, show wasted time
+          d.totalWastedHrs = d.total / CHARS_PER_HOUR_TYPED;
+          d.avgWastedHrsPerDoc = d.activeCount > 0 ? d.totalWastedHrs / d.activeCount : 0;
+          d.avgCharsPerDoc = d.activeCount > 0 ? d.total / d.activeCount : 0;
+          d.timeWithDictation = d.totalWastedHrs / DICTATION_SPEEDUP;
+        }
       });
     }
 
@@ -953,51 +999,68 @@
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
         
-        const savingsHTML = isSavingsVisible ? `
-          <div class="savings-info visible">
-            <div class="savings-header">
-              <span class="savings-icon">⚡</span>
-              <span class="savings-title">With Dictation (3x Faster)</span>
-            </div>
-            <div class="savings-metric">
-              Only ~${data.timeWithDictation.toFixed(1)} hrs/day needed
-            </div>
-            <div class="savings-comparison">
-              <div class="comparison-item">
-                <div class="comparison-label">Currently</div>
-                <div class="comparison-value before">${data.totalWastedHrs.toFixed(1)} hrs</div>
+        if (data.isDictation) {
+          // Dictation departments: Show time saved by using dictation
+          deptCard.innerHTML = `
+            <div class="dept-header" onclick="toggleUsers('${dept}')">
+              <div>
+                <div class="dept-name">${dept} 🎤</div>
+                <div class="dept-metric" style="color:var(--success); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
+                  ~${data.currentTimeWithDictation.toFixed(1)} hrs/day (with dictation)
+                </div>
+                <div style="color:var(--trust-blue); font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
+                  Saves ${data.timeSaved.toFixed(1)} hrs/day vs typing
+                </div>
+                <div class="dept-subtext">
+                  ${data.activeCount} active radiologist${data.activeCount !== 1 ? 's' : ''} •
+                  ${data.total.toLocaleString()} chars dictated/day
+                </div>
+                <div class="savings-info visible" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: var(--success);">
+                  <div class="savings-header">
+                    <span class="savings-icon">⚡</span>
+                    <span class="savings-title" style="color: var(--success);">Time Efficiency with Dictation</span>
+                  </div>
+                  <div class="savings-comparison">
+                    <div class="comparison-item">
+                      <div class="comparison-label">Current (Dictation)</div>
+                      <div class="comparison-value after">${data.currentTimeWithDictation.toFixed(1)} hrs</div>
+                    </div>
+                    <div class="comparison-item">
+                      <div class="comparison-label">Would be (Typing)</div>
+                      <div class="comparison-value before">${data.wouldBeWastedTime.toFixed(1)} hrs</div>
+                    </div>
+                  </div>
+                  <div class="savings-subtext" style="color: #065f46; margin-top:0.5rem;">
+                    Dictation is 3x faster - saving ${((data.timeSaved / data.wouldBeWastedTime) * 100).toFixed(0)}% of time daily
+                  </div>
+                </div>
               </div>
-              <div class="comparison-item">
-                <div class="comparison-label">With Dictation</div>
-                <div class="comparison-value after">${data.timeWithDictation.toFixed(1)} hrs</div>
-              </div>
+              <div class="dept-toggle">▼</div>
             </div>
-            <div class="savings-subtext" style="margin-top:0.5rem;">
-              Save ${((1 - 1/DICTATION_SPEEDUP) * 100).toFixed(0)}% of time - dictation completes the same work in just ${data.timeWithDictation.toFixed(1)} hours instead of ${data.totalWastedHrs.toFixed(1)}
+            <div id="users-${dept}" class="users-container"></div>
+          `;
+        } else {
+          // Typing departments: Show wasted time
+          deptCard.innerHTML = `
+            <div class="dept-header" onclick="toggleUsers('${dept}')">
+              <div>
+                <div class="dept-name">${dept}</div>
+                <div class="dept-metric" style="color:var(--danger); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
+                  ~${data.totalWastedHrs.toFixed(1)} wasted hrs/day
+                </div>
+                <div style="color:#6b7280; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
+                  ${data.avgWastedHrsPerDoc.toFixed(1)} hrs/doctor (avg)
+                </div>
+                <div class="dept-subtext">
+                  ${data.activeCount} active doctor${data.activeCount !== 1 ? 's' : ''} •
+                  ${data.total.toLocaleString()} chars total
+                </div>
+              </div>
+              <div class="dept-toggle">▼</div>
             </div>
-          </div>
-        ` : '';
-
-        deptCard.innerHTML = `
-          <div class="dept-header" onclick="toggleUsers('${dept}')">
-            <div>
-              <div class="dept-name">${dept}</div>
-              <div class="dept-metric" style="color:var(--danger); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
-                ~${data.totalWastedHrs.toFixed(1)} wasted hrs/day
-              </div>
-              <div style="color:#6b7280; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
-                ${data.avgWastedHrsPerDoc.toFixed(1)} hrs/doctor (avg)
-              </div>
-              <div class="dept-subtext">
-                ${data.activeCount} active doctor${data.activeCount !== 1 ? 's' : ''} •
-                ${data.total.toLocaleString()} chars total
-              </div>
-              ${savingsHTML}
-            </div>
-            <div class="dept-toggle">▼</div>
-          </div>
-          <div id="users-${dept}" class="users-container"></div>
-        `;
+            <div id="users-${dept}" class="users-container"></div>
+          `;
+        }
         container.appendChild(deptCard);
       });
 
@@ -1047,9 +1110,9 @@
       `;
 
       const list = document.getElementById(`user-list-${dept}`);
+      const isDictDept = departments[dept].isDictation;
+      
       users.forEach(user => {
-        const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
-        const timeWithDictation = wastedHrs / DICTATION_SPEEDUP;
         const item = document.createElement('div');
         item.className = 'user-item';
         item.style.transition = 'all 0.3s ease';
@@ -1068,19 +1131,35 @@
           item.title = 'Click to exclude';
         }
 
-        const savingsHTML = isSavingsVisible && user.isActive ? `
-          <span class="user-savings">→ Only ${timeWithDictation.toFixed(1)} hrs with dictation</span>
-        ` : '';
-
-        item.innerHTML = `
-          <div class="user-name">${user.original}</div>
-          <div class="user-metric">
-            ${user.chars.toLocaleString()} chars •
-            <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs</span>
-            ${!user.isActive ? ' <em style="color:#9ca3af">(click to include)</em>' : ''}
-            ${savingsHTML}
-          </div>
-        `;
+        if (isDictDept) {
+          // Dictation department users
+          const currentTime = user.chars / CHARS_PER_HOUR_TYPED;
+          const wouldBeTime = currentTime * DICTATION_SPEEDUP;
+          const saved = wouldBeTime - currentTime;
+          
+          item.innerHTML = `
+            <div class="user-name">${user.original} 🎤</div>
+            <div class="user-metric">
+              ${user.chars.toLocaleString()} chars/day •
+              <span style="color:var(--success)">${currentTime.toFixed(1)} hrs</span>
+              <span style="color:var(--trust-blue); margin-left:0.5rem;">saves ${saved.toFixed(1)} hrs vs typing</span>
+              ${!user.isActive ? ' <em style="color:#9ca3af">(click to include)</em>' : ''}
+            </div>
+          `;
+        } else {
+          // Typing department users
+          const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
+          
+          item.innerHTML = `
+            <div class="user-name">${user.original}</div>
+            <div class="user-metric">
+              ${user.chars.toLocaleString()} chars •
+              <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs</span>
+              ${!user.isActive ? ' <em style="color:#9ca3af">(click to include)</em>' : ''}
+            </div>
+          `;
+        }
+        
         list.appendChild(item);
       });
 
@@ -1098,29 +1177,46 @@
       const canvasId = `user-chart-${dept}`;
       const ctx = document.getElementById(canvasId).getContext('2d');
       const labels = activeUsers.map(u => u.original.split(' ')[0]);
-      const wastedData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
-      const dictationData = isSavingsVisible ? activeUsers.map(u => (u.chars / CHARS_PER_HOUR_TYPED) / DICTATION_SPEEDUP) : [];
+      const isDictDept = departments[dept].isDictation;
 
       if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
         userCharts[dept].destroy();
       }
 
-      const datasets = [{
-        label: 'Current Time Wasted',
-        data: wastedData,
-        backgroundColor: 'rgba(239, 68, 68, 0.9)',
-        borderColor: 'rgba(239, 68, 68, 1)',
-        borderWidth: 1,
-      }];
-
-      if (isSavingsVisible) {
-        datasets.push({
-          label: 'Time with Dictation',
-          data: dictationData,
-          backgroundColor: 'rgba(14, 165, 233, 0.9)',
-          borderColor: 'rgba(14, 165, 233, 1)',
+      let datasets;
+      
+      if (isDictDept) {
+        // For dictation departments: show current time and what it would be if typing
+        const currentData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
+        const wouldBeData = activeUsers.map(u => (u.chars / CHARS_PER_HOUR_TYPED) * DICTATION_SPEEDUP);
+        
+        datasets = [
+          {
+            label: 'Current Time (with Dictation)',
+            data: currentData,
+            backgroundColor: 'rgba(16, 185, 129, 0.9)',
+            borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 1,
+          },
+          {
+            label: 'Would Be Time (if Typing)',
+            data: wouldBeData,
+            backgroundColor: 'rgba(239, 68, 68, 0.5)',
+            borderColor: 'rgba(239, 68, 68, 1)',
+            borderWidth: 1,
+          }
+        ];
+      } else {
+        // For typing departments: show wasted time
+        const wastedData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
+        
+        datasets = [{
+          label: 'Current Time Wasted',
+          data: wastedData,
+          backgroundColor: 'rgba(239, 68, 68, 0.9)',
+          borderColor: 'rgba(239, 68, 68, 1)',
           borderWidth: 1,
-        });
+        }];
       }
 
       userCharts[dept] = new Chart(ctx, {
@@ -1162,29 +1258,46 @@
       const filtered = getFilteredDepartments();
 
       const labels = filtered.map(([d]) => d);
-      const wastedData = filtered.map(([, d]) => d.totalWastedHrs);
-      const dictationData = isSavingsVisible ? filtered.map(([, d]) => d.timeWithDictation) : [];
+      const datasets = [];
+
+      // Separate dictation and typing departments
+      const dictDepts = filtered.filter(([_, d]) => d.isDictation);
+      const typingDepts = filtered.filter(([_, d]) => !d.isDictation);
+
+      if (typingDepts.length > 0) {
+        const wastedData = filtered.map(([_, d]) => d.isDictation ? 0 : d.totalWastedHrs);
+        datasets.push({ 
+          label: 'Current Time Wasted (Typing)', 
+          data: wastedData, 
+          backgroundColor: 'rgba(239,68,68,0.9)', 
+          borderColor: 'rgba(239,68,68,1)', 
+          borderWidth: 1 
+        });
+      }
+
+      if (dictDepts.length > 0) {
+        const currentData = filtered.map(([_, d]) => d.isDictation ? d.currentTimeWithDictation : 0);
+        const wouldBeData = filtered.map(([_, d]) => d.isDictation ? d.wouldBeWastedTime : 0);
+        
+        datasets.push({
+          label: 'Current Time (with Dictation)',
+          data: currentData,
+          backgroundColor: 'rgba(16, 185, 129, 0.9)',
+          borderColor: 'rgba(16, 185, 129, 1)',
+          borderWidth: 1
+        });
+        
+        datasets.push({
+          label: 'Would Be Time (if Typing)',
+          data: wouldBeData,
+          backgroundColor: 'rgba(239, 68, 68, 0.5)',
+          borderColor: 'rgba(239, 68, 68, 1)',
+          borderWidth: 1
+        });
+      }
 
       if (window.deptChart && typeof window.deptChart.destroy === 'function') {
         window.deptChart.destroy();
-      }
-
-      const datasets = [{ 
-        label: 'Current Time Wasted', 
-        data: wastedData, 
-        backgroundColor: 'rgba(239,68,68,0.9)', 
-        borderColor: 'rgba(239,68,68,1)', 
-        borderWidth: 1 
-      }];
-
-      if (isSavingsVisible) {
-        datasets.push({
-          label: 'Time with Dictation',
-          data: dictationData,
-          backgroundColor: 'rgba(14, 165, 233, 0.9)',
-          borderColor: 'rgba(14, 165, 233, 1)',
-          borderWidth: 1
-        });
       }
 
       window.deptChart = new Chart(ctx, {
@@ -1205,35 +1318,6 @@
       });
     }
 
-    window.toggleSavings = function() {
-      const btn = document.getElementById('savingsToggle');
-      const banner = document.getElementById('savingsBanner');
-      
-      isSavingsVisible = !isSavingsVisible;
-      
-      if (isSavingsVisible) {
-        btn.textContent = 'Hide Potential Savings';
-        btn.classList.add('savings-btn');
-        banner.classList.add('visible');
-        document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Current Wasted Time • Blue = Time with Dictation (3x faster)';
-      } else {
-        btn.textContent = 'Show Potential Savings';
-        btn.classList.add('savings-btn');
-        banner.classList.remove('visible');
-        document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
-      }
-      
-      renderDepartments();
-      renderDeptChart();
-      
-      Object.keys(departments).forEach(dept => {
-        const container = document.getElementById(`users-${dept}`);
-        if (container && container.classList.contains('open')) {
-          renderUserSection(dept);
-        }
-      });
-    };
-
     window.toggleDictation = function () {
       const btn = document.getElementById('dictationToggle');
       const deptsDiv = document.getElementById('departments');
@@ -1241,21 +1325,13 @@
       const dictationSection = document.getElementById('dictationSection');
       const subtitle = document.getElementById('subtitle');
       const filterPanel = document.getElementById('filterPanel');
-      const savingsBtn = document.getElementById('savingsToggle');
-      const savingsBanner = document.getElementById('savingsBanner');
 
       if (isDictationVisible) {
         dictationSection.classList.add('hidden');
         deptsDiv.classList.remove('hidden');
         chartContainer.style.display = 'block';
         filterPanel.style.display = 'block';
-        savingsBtn.style.display = 'inline-block';
-        if (isSavingsVisible) {
-          savingsBanner.classList.add('visible');
-          subtitle.textContent = 'All time in HOURS • Red = Current Wasted Time • Blue = Time with Dictation (3x faster)';
-        } else {
-          subtitle.textContent = 'All time in HOURS • Red = Wasted Time at 20 WPM';
-        }
+        subtitle.textContent = 'All time in HOURS • Red = Wasted Time (Typing) • Green = Time Saved (Dictation)';
         btn.textContent = 'Show Dictation Data';
         btn.classList.remove('dictation-btn');
         isDictationVisible = false;
@@ -1268,8 +1344,6 @@
         deptsDiv.classList.add('hidden');
         chartContainer.style.display = 'none';
         filterPanel.style.display = 'none';
-        savingsBtn.style.display = 'none';
-        savingsBanner.classList.remove('visible');
         dictationSection.classList.remove('hidden');
         btn.textContent = 'Hide Dictation Data';
         btn.classList.add('dictation-btn');
@@ -1387,14 +1461,20 @@
         }
       });
       
-      deptData.totalWastedHrs = deptData.total / CHARS_PER_HOUR_TYPED;
-      deptData.avgWastedHrsPerDoc = deptData.activeCount > 0 ? deptData.totalWastedHrs / deptData.activeCount : 0;
-      deptData.timeWithDictation = deptData.totalWastedHrs / DICTATION_SPEEDUP;
+      if (deptData.isDictation) {
+        deptData.currentTimeWithDictation = deptData.total / CHARS_PER_HOUR_TYPED;
+        deptData.wouldBeWastedTime = deptData.currentTimeWithDictation * DICTATION_SPEEDUP;
+        deptData.timeSaved = deptData.wouldBeWastedTime - deptData.currentTimeWithDictation;
+        deptData.avgCurrentTimePerDoc = deptData.activeCount > 0 ? deptData.currentTimeWithDictation / deptData.activeCount : 0;
+      } else {
+        deptData.totalWastedHrs = deptData.total / CHARS_PER_HOUR_TYPED;
+        deptData.avgWastedHrsPerDoc = deptData.activeCount > 0 ? deptData.totalWastedHrs / deptData.activeCount : 0;
+        deptData.timeWithDictation = deptData.totalWastedHrs / DICTATION_SPEEDUP;
+      }
       
       renderUserSection(dept);
       renderDepartments();
       renderDeptChart();
-      updateSavingsBanner();
     };
 
     function updateLastRefreshTime() {
@@ -1425,9 +1505,7 @@
           document.getElementById('loading').style.display = 'none';
           document.getElementById('chartContainer').style.display = 'block';
           document.getElementById('dictationToggle').style.display = 'inline-block';
-          document.getElementById('savingsToggle').style.display = 'inline-block';
           updateLastRefreshTime();
-          updateSavingsBanner();
         } catch (err) {
           console.error('Error loading cached data:', err);
         }
