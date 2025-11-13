@@ -1,4 +1,56 @@
-<!DOCTYPE html>
+function processData() {
+      departments = {};
+      rawDataTyping.forEach(item => {
+        const dept = extractDepartment(item.hostname);
+        
+        // Skip excluded departments
+        if (!dept) return;
+        
+        if (!departments[dept]) {
+          departments[dept] = { users: [], total: 0, count: 0, activeCount: 0, isDictation: isDictationDepartment(dept) };
+          sortStates[dept] = { type: 'avg', dir: 'desc' };
+        }
+        
+        item.originalChars = item.chars;
+        const userKey = getUserKey(item.original);
+        
+        // For MRT and CT departments, use dictation data
+        if (departments[dept].isDictation && DICTATION_USERS[userKey] !== undefined) {
+          item.dictationChars = DICTATION_USERS[userKey];
+          item.chars = item.dictationChars;
+          item.isDictationUser = true;
+        } else {
+          item.isDictationUser = false;
+        }
+        
+        departments[dept].users.push(item);
+        if (item.chars >= 2000) {
+          item.isActive = true;
+          departments[dept].total += item.chars;
+          departments[dept].count += 1;
+          departments[dept].activeCount += 1;
+        } else {
+          item.isActive = false;
+        }
+      });
+
+      Object.keys(departments).forEach(dept => {
+        const d = departments[dept];
+        if (d.isDictation) {
+          // For dictation departments, show time saved (current time with dictation)
+          d.currentTimeWithDictation = d.total / CHARS_PER_HOUR_TYPED;
+          d.wouldBeWastedTime = d.currentTimeWithDictation * DICTATION_SPEEDUP;
+          d.timeSaved = d.wouldBeWastedTime - d.currentTimeWithDictation;
+          d.avgCurrentTimePerDoc = d.activeCount > 0 ? d.currentTimeWithDictation / d.activeCount : 0;
+        } else {
+          // For typing departments, show wasted time
+          d.totalWastedHrs = d.total / CHARS_PER_HOUR_TYPED;
+          d.avgWastedHrsPerDoc = d.activeCount > 0 ? d.totalWastedHrs / d.activeCount : 0;
+          d.avgCharsPerDoc = d.activeCount > 0 ? d.total / d.activeCount : 0;
+          d.timeWithDictation = d.totalWastedHrs / DICTATION_SPEEDUP;
+        }
+      });
+    }<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -635,23 +687,23 @@
 <body>
   <div id="loginScreen" class="login-screen">
     <div class="login-box">
-      <img src="erebuni.png" alt="Erebuni Medical Center" class="login-logo">
-      <h2 class="login-title">Productivity Dashboard</h2>
-      <p class="login-subtitle">Enter password to access analytics</p>
-      <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
+      <img src="erebuni.png" alt="Էրեբունի բժշկական կենտրոն" class="login-logo">
+      <h2 class="login-title">Արտադրողականության վահանակ</h2>
+      <p class="login-subtitle">Մուտքագրեք գաղտնաբառը վերլուծության մուտք գործելու համար</p>
+      <div class="login-error" id="loginError">Սխալ գաղտնաբառ։ Խնդրում ենք կրկին փորձել։</div>
       <div class="password-wrapper">
         <input 
           type="password" 
           id="passwordInput" 
           class="login-input" 
-          placeholder="Enter password"
+          placeholder="Մուտքագրեք գաղտնաբառը"
           autocomplete="off"
         >
         <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
           👁
         </button>
       </div>
-      <button class="login-btn" onclick="handleLogin()">Access Dashboard</button>
+      <button class="login-btn" onclick="handleLogin()">Մուտք գործել վահանակ</button>
     </div>
   </div>
 
@@ -670,57 +722,57 @@
         <div class="savings-banner-content">
           <div class="savings-stat">
             <span class="savings-stat-value" id="totalTimeAfter">0</span>
-            <span class="savings-stat-label">Hours Spent with Dictation</span>
-            <div class="savings-stat-sublabel">(3x faster than typing)</div>
+            <span class="savings-stat-label">Ժամեր դիկտացիայով</span>
+            <div class="savings-stat-sublabel">(3 անգամ ավելի արագ քան տպագրումը)</div>
           </div>
           <div class="savings-stat">
             <span class="savings-stat-value" id="totalTimeBefore">0</span>
-            <span class="savings-stat-label">Hours Wasted Currently</span>
-            <div class="savings-stat-sublabel">(typing at 20 WPM)</div>
+            <span class="savings-stat-label">Ներկայումս կորած ժամեր</span>
+            <div class="savings-stat-sublabel">(տպագրում 20 բառ/րոպե արագությամբ)</div>
           </div>
           <div class="savings-stat">
             <span class="savings-stat-value" id="savingsPercent">0%</span>
-            <span class="savings-stat-label">Time Reduction</span>
+            <span class="savings-stat-label">Ժամանակի կրճատում</span>
           </div>
         </div>
       </div>
 
       <div id="filterPanel" class="calculator-panel" style="display:none; margin-top:1.5rem;">
-        <div class="calculator-title">Filter Departments by Avg Hrs/Doctor</div>
+        <div class="calculator-title">Զտել բաժինները ըստ միջին ժամ/բժիշկ</div>
         <div class="calculator-row" style="align-items:center; gap:1.5rem; flex-wrap:wrap;">
           <div style="flex:1; min-width:200px;">
             <label style="font-weight:600; display:block; margin-bottom:0.5rem;">
-              Show departments where average wasted time per doctor is ≥
+              Ցուցադրել բաժինները, որտեղ մեկ բժշկի միջին կորած ժամանակը ≥
             </label>
             <input type="number" step="0.1" min="0" value="0" placeholder="0" id="minHrsFilter"
               style="width:100%; max-width:120px; font-size:1.1rem; padding:0.6rem;">
           </div>
           <div style="display:flex; gap:2rem; font-size:1.1rem; font-weight:600; color:var(--text);">
             <div>
-              <strong id="totalUsers">0</strong> doctors in filtered depts
+              <strong id="totalUsers">0</strong> բժիշկ զտված բաժիններում
             </div>
             <div>
-              <strong id="activeDepts">0</strong> department<span id="deptPlural">s</span>
+              <strong id="activeDepts">0</strong> բաժին<span id="deptPlural"></span>
             </div>
           </div>
         </div>
       </div>
 
-      <div id="loading" class="loading">Click "Refresh Data" to load...</div>
+      <div id="loading" class="loading">Սեղմեք «Թարմացնել տվյալները» բեռնելու համար...</div>
       <div id="error" class="error" style="display:none;"></div>
       <div id="chartContainer" class="chart-container" style="display:none;">
         <canvas id="deptChart"></canvas>
       </div>
       <div id="departments"></div>
       <div id="dictationSection" class="dictation-container hidden">
-        <h2 class="dictation-title">Dictation Data (Chars/Day)</h2>
+        <h2 class="dictation-title">Դիկտացիայի տվյալներ (Նիշեր/օր)</h2>
         <div id="dictationList"></div>
         <div class="chart-container dictation-chart">
           <canvas id="dictationChart"></canvas>
         </div>
       </div>
       <div class="footer">
-        Manual refresh only • 1 hr saved per 60,000 chars • Typing: 20 WPM
+        Միայն ձեռքով թարմացում • 1 ժամ խնայվում է 60,000 նիշի համար • Տպագրում՝ 20 բառ/րոպե
       </div>
     </div>
   </div>
@@ -807,6 +859,15 @@
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
 
+      // Excluded departments - return null to filter them out
+      const excluded = ['zhenya', 'pahest', 'oper', 'buleten', 'aphoteka', 'archiv', 'arxiv', 
+                       'premium', 'comfort', 'inform', 'opersroom', 'lawyer', 'confortp', 
+                       'statistic', 'radiology', 'tntes', 'manage', 'luso', 'windows'];
+      
+      for (const exc of excluded) {
+        if (lower.includes(exc)) return null;
+      }
+
       if (lower.includes('ctomography')) return 'CT';
       if (lower.includes('cardiopulm')) return 'Cardio-Pulm';
       if (lower.includes('cardiobit')) return 'Cardio-Bit';
@@ -881,20 +942,20 @@
         renderDeptChart();
         loading.style.display = 'none';
         chartContainer.style.display = 'block';
-        document.getElementById('subtitle').textContent = 'All time in HOURS • Red = Wasted Time (Typing) • Green = Time Saved (Dictation)';
+        document.getElementById('subtitle').textContent = 'Ամբողջ ժամանակը ԺԱՄԵՐՈՎ • Կարմիր = Կորած ժամանակ (Տպագրում) • Կանաչ = Խնայված ժամանակ (Դիկտացիա)';
         document.getElementById('dictationToggle').style.display = 'inline-block';
         updateLastRefreshTime();
       } catch (err) {
         loading.style.display = 'none';
         error.style.display = 'block';
-        error.textContent = `Error: ${err.message}`;
+        error.textContent = `Սխալ: ${err.message}`;
       }
     }
 
     async function loadDictationData() {
       const loading = document.getElementById('loading');
       loading.style.display = 'block';
-      loading.textContent = 'Loading dictation data...';
+      loading.textContent = 'Բեռնվում են դիկտացիայի տվյալները...';
       try {
         const res = await fetch(DICTATION_URL + '?t=' + Date.now());
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -919,7 +980,7 @@
       } catch (err) {
         loading.style.display = 'none';
         document.getElementById('error').style.display = 'block';
-        document.getElementById('error').textContent = `Error loading dictation: ${err.message}`;
+        document.getElementById('error').textContent = `Դիկտացիա բեռնելու սխալ: ${err.message}`;
       }
     }
 
@@ -1020,32 +1081,32 @@
               <div>
                 <div class="dept-name">${dept} 🎤</div>
                 <div class="dept-metric" style="color:var(--success); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
-                  ~${data.currentTimeWithDictation.toFixed(1)} hrs/day (with dictation)
+                  ~${data.currentTimeWithDictation.toFixed(1)} ժ/օր (դիկտացիայով)
                 </div>
                 <div style="color:var(--trust-blue); font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
-                  Saves ${data.timeSaved.toFixed(1)} hrs/day vs typing
+                  Խնայում է ${data.timeSaved.toFixed(1)} ժ/օր տպագրման հետ համեմատ
                 </div>
                 <div class="dept-subtext">
-                  ${data.activeCount} active radiologist${data.activeCount !== 1 ? 's' : ''} •
-                  ${data.total.toLocaleString()} chars dictated/day
+                  ${data.activeCount} ակտիվ ռադիոլոգ${data.activeCount !== 1 ? 'ներ' : ''} •
+                  ${data.total.toLocaleString()} նիշ դիկտացվել է/օր
                 </div>
                 <div class="savings-info visible" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: var(--success);">
                   <div class="savings-header">
                     <span class="savings-icon">⚡</span>
-                    <span class="savings-title" style="color: var(--success);">Time Efficiency with Dictation</span>
+                    <span class="savings-title" style="color: var(--success);">Ժամանակի արդյունավետություն դիկտացիայով</span>
                   </div>
                   <div class="savings-comparison">
                     <div class="comparison-item">
-                      <div class="comparison-label">Current (Dictation)</div>
-                      <div class="comparison-value after">${data.currentTimeWithDictation.toFixed(1)} hrs</div>
+                      <div class="comparison-label">Ներկայումս (Դիկտացիա)</div>
+                      <div class="comparison-value after">${data.currentTimeWithDictation.toFixed(1)} ժ</div>
                     </div>
                     <div class="comparison-item">
-                      <div class="comparison-label">Would be (Typing)</div>
-                      <div class="comparison-value before">${data.wouldBeWastedTime.toFixed(1)} hrs</div>
+                      <div class="comparison-label">Կլիներ (Տպագրում)</div>
+                      <div class="comparison-value before">${data.wouldBeWastedTime.toFixed(1)} ժ</div>
                     </div>
                   </div>
                   <div class="savings-subtext" style="color: #065f46; margin-top:0.5rem;">
-                    Dictation is 3x faster - saving ${((data.timeSaved / data.wouldBeWastedTime) * 100).toFixed(0)}% of time daily
+                    Դիկտացիան 3 անգամ ավելի արագ է - խնայում է ${((data.timeSaved / data.wouldBeWastedTime) * 100).toFixed(0)}% ժամանակ օրական
                   </div>
                 </div>
               </div>
@@ -1060,14 +1121,14 @@
               <div>
                 <div class="dept-name">${dept}</div>
                 <div class="dept-metric" style="color:var(--danger); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
-                  ~${data.totalWastedHrs.toFixed(1)} wasted hrs/day
+                  ~${data.totalWastedHrs.toFixed(1)} կորած ժ/օր
                 </div>
                 <div style="color:#6b7280; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
-                  ${data.avgWastedHrsPerDoc.toFixed(1)} hrs/doctor (avg)
+                  ${data.avgWastedHrsPerDoc.toFixed(1)} ժ/բժիշկ (միջին)
                 </div>
                 <div class="dept-subtext">
-                  ${data.activeCount} active doctor${data.activeCount !== 1 ? 's' : ''} •
-                  ${data.total.toLocaleString()} chars total
+                  ${data.activeCount} ակտիվ բժիշկ${data.activeCount !== 1 ? 'ներ' : ''} •
+                  ${data.total.toLocaleString()} նիշ ընդամենը
                 </div>
               </div>
               <div class="dept-toggle">▼</div>
@@ -1110,11 +1171,11 @@
       container.innerHTML = `
         <div class="sort-controls">
           <select onchange="updateSort('${dept}', 'type', this.value)">
-            <option value="avg" selected>Avg Chars</option>
+            <option value="avg" selected>Միջին նիշեր</option>
           </select>
           <select onchange="updateSort('${dept}', 'dir', this.value)">
-            <option value="desc" selected>Descending</option>
-            <option value="asc">Ascending</option>
+            <option value="desc" selected>Նվազող</option>
+            <option value="asc">Աճող</option>
           </select>
         </div>
         <div class="user-list" id="user-list-${dept}"></div>
@@ -1138,11 +1199,11 @@
         if (!user.isActive) {
           item.style.opacity = '0.35';
           item.style.filter = 'blur(1.2px)';
-          item.title = 'Click to include';
+          item.title = 'Սեղմեք ընդգրկելու համար';
         } else {
           item.style.opacity = '1';
           item.style.filter = 'none';
-          item.title = 'Click to exclude';
+          item.title = 'Սեղմեք բացառելու համար';
         }
 
         if (isDictDept) {
@@ -1154,10 +1215,10 @@
           item.innerHTML = `
             <div class="user-name">${user.original} 🎤</div>
             <div class="user-metric">
-              ${user.chars.toLocaleString()} chars/day •
-              <span style="color:var(--success)">${currentTime.toFixed(1)} hrs</span>
-              <span style="color:var(--trust-blue); margin-left:0.5rem;">saves ${saved.toFixed(1)} hrs vs typing</span>
-              ${!user.isActive ? ' <em style="color:#9ca3af">(click to include)</em>' : ''}
+              ${user.chars.toLocaleString()} նիշ/օր •
+              <span style="color:var(--success)">${currentTime.toFixed(1)} ժ</span>
+              <span style="color:var(--trust-blue); margin-left:0.5rem;">խնայում է ${saved.toFixed(1)} ժ տպագրման հետ համեմատ</span>
+              ${!user.isActive ? ' <em style="color:#9ca3af">(սեղմեք ընդգրկելու համար)</em>' : ''}
             </div>
           `;
         } else {
@@ -1167,9 +1228,9 @@
           item.innerHTML = `
             <div class="user-name">${user.original}</div>
             <div class="user-metric">
-              ${user.chars.toLocaleString()} chars •
-              <span style="color:var(--danger)">${wastedHrs.toFixed(1)} hrs</span>
-              ${!user.isActive ? ' <em style="color:#9ca3af">(click to include)</em>' : ''}
+              ${user.chars.toLocaleString()} նիշ •
+              <span style="color:var(--danger)">${wastedHrs.toFixed(1)} ժ</span>
+              ${!user.isActive ? ' <em style="color:#9ca3af">(սեղմեք ընդգրկելու համար)</em>' : ''}
             </div>
           `;
         }
@@ -1206,14 +1267,14 @@
         
         datasets = [
           {
-            label: 'Current Time (with Dictation)',
+            label: 'Ներկայիս ժամանակ (դիկտացիայով)',
             data: currentData,
             backgroundColor: 'rgba(16, 185, 129, 0.9)',
             borderColor: 'rgba(16, 185, 129, 1)',
             borderWidth: 1,
           },
           {
-            label: 'Would Be Time (if Typing)',
+            label: 'Կլիներ (եթե տպագրեին)',
             data: wouldBeData,
             backgroundColor: 'rgba(239, 68, 68, 0.5)',
             borderColor: 'rgba(239, 68, 68, 1)',
@@ -1225,7 +1286,7 @@
         const wastedData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
         
         datasets = [{
-          label: 'Current Time Wasted',
+          label: 'Ներկայիս կորած ժամանակ',
           data: wastedData,
           backgroundColor: 'rgba(239, 68, 68, 0.9)',
           borderColor: 'rgba(239, 68, 68, 1)',
@@ -1244,10 +1305,10 @@
           responsive: true,
           plugins: {
             legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} hrs/day` } }
+            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} ժ/օր` } }
           },
           scales: {
-            x: { beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
+            x: { beginAtZero: true, title: { display: true, text: 'Ժամեր օրական' } },
             y: { grid: { display: false } }
           }
         }
@@ -1281,7 +1342,7 @@
       if (typingDepts.length > 0) {
         const wastedData = filtered.map(([_, d]) => d.isDictation ? 0 : d.totalWastedHrs);
         datasets.push({ 
-          label: 'Current Time Wasted (Typing)', 
+          label: 'Ներկայիս կորած ժամանակ (Տպագրում)', 
           data: wastedData, 
           backgroundColor: 'rgba(239,68,68,0.9)', 
           borderColor: 'rgba(239,68,68,1)', 
@@ -1294,7 +1355,7 @@
         const wouldBeData = filtered.map(([_, d]) => d.isDictation ? d.wouldBeWastedTime : 0);
         
         datasets.push({
-          label: 'Current Time (with Dictation)',
+          label: 'Ներկայիս ժամանակ (դիկտացիայով)',
           data: currentData,
           backgroundColor: 'rgba(16, 185, 129, 0.9)',
           borderColor: 'rgba(16, 185, 129, 1)',
@@ -1302,7 +1363,7 @@
         });
         
         datasets.push({
-          label: 'Would Be Time (if Typing)',
+          label: 'Կլիներ (եթե տպագրեին)',
           data: wouldBeData,
           backgroundColor: 'rgba(239, 68, 68, 0.5)',
           borderColor: 'rgba(239, 68, 68, 1)',
@@ -1325,7 +1386,7 @@
           responsive: true,
           plugins: { legend: { position: 'top' } },
           scales: {
-            x: { beginAtZero: true, title: { display: true, text: 'Hours per Day' } },
+            x: { beginAtZero: true, title: { display: true, text: 'Ժամեր օրական' } },
             y: { grid: { display: false } }
           }
         }
@@ -1345,8 +1406,8 @@
         deptsDiv.classList.remove('hidden');
         chartContainer.style.display = 'block';
         filterPanel.style.display = 'block';
-        subtitle.textContent = 'All time in HOURS • Red = Wasted Time (Typing) • Green = Time Saved (Dictation)';
-        btn.textContent = 'Show Dictation Data';
+        subtitle.textContent = 'Ամբողջ ժամանակը ԺԱՄԵՐՈՎ • Կարմիր = Կորած ժամանակ (Տպագրում) • Կանաչ = Խնայված ժամանակ (Դիկտացիա)';
+        btn.textContent = 'Ցուցադրել դիկտացիայի տվյալները';
         btn.classList.remove('dictation-btn');
         isDictationVisible = false;
       } else {
@@ -1359,9 +1420,9 @@
         chartContainer.style.display = 'none';
         filterPanel.style.display = 'none';
         dictationSection.classList.remove('hidden');
-        btn.textContent = 'Hide Dictation Data';
+        btn.textContent = 'Թաքցնել դիկտացիայի տվյալները';
         btn.classList.add('dictation-btn');
-        subtitle.textContent = 'Dictation Data • Red = Saved Time via Dictation';
+        subtitle.textContent = 'Դիկտացիայի տվյալներ • Կարմիր = Խնայված ժամանակ դիկտացիայի միջոցով';
         isDictationVisible = true;
       }
     };
@@ -1396,7 +1457,7 @@
           labels,
           datasets: [
             {
-              label: 'Daily Chars (Dictated)',
+              label: 'Օրական նիշեր (Դիկտացված)',
               data: charsData,
               backgroundColor: 'rgba(239, 68, 68, 0.8)',
               borderColor: 'rgba(239, 68, 68, 1)',
@@ -1409,12 +1470,12 @@
           responsive: true,
           plugins: {
             legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} chars/day` } }
+            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} նիշ/օր` } }
           },
           scales: {
             x: {
               beginAtZero: true,
-              title: { display: true, text: 'Chars per Day' }
+              title: { display: true, text: 'Նիշեր օրական' }
             },
             y: {
               grid: { display: false }
@@ -1436,7 +1497,7 @@
 
       document.getElementById('totalUsers').textContent = filteredDoctors;
       document.getElementById('activeDepts').textContent = visibleDepts;
-      document.getElementById('deptPlural').textContent = visibleDepts === 1 ? '' : 's';
+      document.getElementById('deptPlural').textContent = '';
     }
 
     function updateSavingsBanner() {
@@ -1495,10 +1556,10 @@
       const timestamp = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
       if (timestamp) {
         const date = new Date(timestamp);
-        const timeStr = date.toLocaleString();
+        const timeStr = date.toLocaleString('hy-AM');
         document.querySelector('.footer').innerHTML = `
-          Manual refresh only • 1 hr saved per 60,000 chars • Typing: 20 WPM<br>
-          <span style="color: #10b981; font-weight: 600;">Last refreshed: ${timeStr}</span>
+          Միայն ձեռքով թարմացում • 1 ժամ խնայվում է 60,000 նիշի համար • Տպագրում՝ 20 բառ/րոպե<br>
+          <span style="color: #10b981; font-weight: 600;">Վերջին թարմացում՝ ${timeStr}</span>
         `;
       }
     }
