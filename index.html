@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,108 +20,618 @@
       --accent: #6366f1;
       --trust-blue: #0ea5e9;
     }
+
     .login-screen {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      display: flex; align-items: center; justify-content: center; z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
     }
-    .login-screen.hidden { display: none; }
+
+    .login-screen.hidden {
+      display: none;
+    }
+
     .login-box {
-      background: white; padding: 3rem 2.5rem; border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); text-align: center;
-      max-width: 400px; width: 90%; animation: slideIn 0.4s ease;
+      background: white;
+      padding: 3rem 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      animation: slideIn 0.4s ease;
     }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-    .login-logo { width: 220px; height: auto; margin-bottom: 2rem; object-fit: contain; }
-    .login-title { font-size: 1.5rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
-    .login-subtitle { font-size: 0.95rem; color: #64748b; margin-bottom: 2rem; }
-    .login-input { width: 100%; padding: 0.9rem 1.2rem; padding-right: 3rem; border: 2px solid var(--border); border-radius: 10px; font-size: 1rem; transition: all 0.3s; }
-    .password-wrapper { position: relative; width: 100%; margin-bottom: 1.5rem; }
-    .password-toggle { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #64748b; padding: 0.5rem; transition: color 0.2s; }
-    .password-toggle:hover { color: var(--primary); }
-    .login-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-    .login-input.error { border-color: var(--danger); animation: shake 0.4s; }
-    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-    .login-btn { width: 100%; padding: 0.9rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-    .login-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4); }
-    .login-error { color: var(--danger); font-size: 0.9rem; margin-bottom: 1rem; display: none; }
-    .login-error.visible { display: block; }
-    .main-content { display: none; }
-    .main-content.visible { display: block; }
-    * { box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1rem; }
-    .container { max-width: 1200px; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 2rem; }
-    h1 { color: var(--primary); font-size: 2rem; margin: 0 0 0.5rem; }
-    .subtitle { color: #64748b; font-size: 1rem; }
-    .controls { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; justify-content: center; align-items: center; }
-    select, button, input[type="checkbox"] { padding: 0.65rem 1.2rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; transition: 0.2s; }
-    select { min-width: 200px; background: white; }
-    button { background: var(--primary); color: white; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); }
-    button:hover { background: #2563eb; transform: translateY(-1px); }
-    .dictation-btn { background: var(--danger); }
-    .dictation-btn:hover { background: #dc2626; }
-    .savings-btn { background: var(--trust-blue); }
-    .savings-btn:hover { background: #0284c7; }
-    .view-toggle { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: #475569; }
-    .view-toggle label { cursor: pointer; }
-    .dept-card { background: var(--card); border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem; cursor: pointer; transition: 0.2s; }
-    .dept-card:hover { transform: translateY(-2px); }
-    .dept-header { display: flex; justify-content: space-between; align-items: center; }
-    .dept-name { font-weight: 700; font-size: 1.3rem; color: var(--primary); }
-    .dept-toggle { font-size: 1.2rem; color: var(--accent); }
-    .dept-metric { font-size: 1.6rem; font-weight: 800; margin: 0.5rem 0; }
-    .dept-subtext { font-size: 0.9rem; color: #64748b; }
-    .savings-info { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border: 2px solid var(--trust-blue); border-radius: 10px; padding: 1rem 1.25rem; margin-top: 1rem; display: none; }
-    .savings-info.visible { display: block; animation: slideDown 0.3s ease; }
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    .savings-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
-    .savings-icon { font-size: 1.5rem; }
-    .savings-title { font-weight: 700; font-size: 1.1rem; color: var(--trust-blue); }
-    .savings-metric { font-size: 1.4rem; font-weight: 800; color: var(--trust-blue); margin: 0.25rem 0; }
-    .savings-subtext { font-size: 0.85rem; color: #0369a1; font-weight: 500; }
-    .savings-comparison { display: flex; gap: 1rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(14, 165, 233, 0.2); }
-    .comparison-item { flex: 1; }
-    .comparison-label { font-size: 0.75rem; color: #0369a1; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem; }
-    .comparison-value { font-size: 1.1rem; font-weight: 700; }
-    .comparison-value.before { color: var(--danger); }
-    .comparison-value.after { color: var(--trust-blue); }
-    .sort-controls { display: flex; gap: 0.5rem; margin: 1rem 0; font-size: 0.85rem; }
-    .sort-controls select { font-size: 0.8rem; padding: 0.3rem 0.6rem; }
-    .users-container { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: none; }
-    .users-container.open { display: block; }
-    .user-list { margin-bottom: 1.5rem; }
-    .user-item { background: #f8fafc; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .user-name { font-weight: 600; color: var(--text); }
-    .user-metric { font-weight: 700; font-size: 1rem; }
-    .user-savings { color: var(--trust-blue); font-size: 0.9rem; font-weight: 600; margin-left: 0.5rem; }
-    .dictation-container { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
-    .dictation-title { color: var(--danger); font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; text-align: center; }
-    .dictation-item { background: #fee2e2; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border: 1px solid #fecaca; display: flex; justify-content: space-between; align-items: center; }
-    .dictation-metric { font-weight: 700; font-size: 1rem; color: var(--danger); }
-    .chart-container { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow); margin: 1.5rem 0; border: 1px solid var(--border); }
-    .dictation-chart { background: #fef2f2; border: 1px solid #fecaca; }
-    .loading, .error { text-align: center; padding: 2rem; border-radius: 12px; margin: 1rem 0; }
-    .loading { color: #64748b; background: #f8fafc; }
-    .error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-    .footer { text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: 3rem; }
-    .hidden { display: none !important; }
-    .calculator-panel { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); font-size: 0.95rem; }
-    .calculator-title { font-weight: 700; color: var(--text); margin-bottom: 1rem; font-size: 1.1rem; }
-    .calculator-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
-    .calculator-row label { min-width: 180px; font-weight: 600; }
-    .calculator-row input { padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; width: 100px; }
-    .calculator-result { background: #f1f5f9; padding: 0.75rem 1rem; border-radius: 8px; font-weight: 600; color: var(--primary); margin-top: 0.5rem; }
-    .calculator-result strong { color: var(--text); }
-    .savings-banner { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 1.25rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.3); display: none; }
-    .savings-banner.visible { display: block; animation: slideDown 0.3s ease; }
-    .savings-banner-content { display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
-    .savings-stat { text-align: center; }
-    .savings-stat-value { font-size: 2rem; font-weight: 800; display: block; margin-bottom: 0.25rem; }
-    .savings-stat-label { font-size: 0.9rem; opacity: 0.95; font-weight: 500; }
-    .savings-stat-sublabel { font-size: 0.75rem; opacity: 0.85; font-weight: 400; margin-top: 0.25rem; }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-logo {
+      width: 220px;
+      height: auto;
+      margin-bottom: 2rem;
+      object-fit: contain;
+    }
+
+    .login-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .login-subtitle {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      padding-right: 3rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .password-wrapper {
+      position: relative;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #64748b;
+      padding: 0.5rem;
+      transition: color 0.2s;
+    }
+
+    .password-toggle:hover {
+      color: var(--primary);
+    }
+
+    .login-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .login-input.error {
+      border-color: var(--danger);
+      animation: shake 0.4s;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .login-error {
+      color: var(--danger);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .login-error.visible {
+      display: block;
+    }
+
+    .main-content {
+      display: none;
+    }
+
+    .main-content.visible {
+      display: block;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      color: var(--primary);
+      font-size: 2rem;
+      margin: 0 0 0.5rem;
+    }
+
+    .subtitle {
+      color: #64748b;
+      font-size: 1rem;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    select,
+    button,
+    input[type="checkbox"] {
+      padding: 0.65rem 1.2rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: 0.2s;
+    }
+
+    select {
+      min-width: 200px;
+      background: white;
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    button:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    .dictation-btn {
+      background: var(--danger);
+    }
+
+    .dictation-btn:hover {
+      background: #dc2626;
+    }
+
+    .savings-btn {
+      background: var(--trust-blue);
+    }
+
+    .savings-btn:hover {
+      background: #0284c7;
+    }
+
+    .view-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    .view-toggle label {
+      cursor: pointer;
+    }
+
+    .dept-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .dept-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .dept-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dept-name {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--primary);
+    }
+
+    .dept-toggle {
+      font-size: 1.2rem;
+      color: var(--accent);
+    }
+
+    .dept-metric {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin: 0.5rem 0;
+    }
+
+    .dept-subtext {
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+
+    .savings-info {
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+      border: 2px solid var(--trust-blue);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .savings-info.visible {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .savings-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .savings-icon {
+      font-size: 1.5rem;
+    }
+
+    .savings-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--trust-blue);
+    }
+
+    .savings-metric {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--trust-blue);
+      margin: 0.25rem 0;
+    }
+
+    .savings-subtext {
+      font-size: 0.85rem;
+      color: #0369a1;
+      font-weight: 500;
+    }
+
+    .savings-comparison {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(14, 165, 233, 0.2);
+    }
+
+    .comparison-item {
+      flex: 1;
+    }
+
+    .comparison-label {
+      font-size: 0.75rem;
+      color: #0369a1;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .comparison-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .comparison-value.before {
+      color: var(--danger);
+    }
+
+    .comparison-value.after {
+      color: var(--trust-blue);
+    }
+
+    .sort-controls {
+      display: flex;
+      gap: 0.5rem;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+    }
+
+    .sort-controls select {
+      font-size: 0.8rem;
+      padding: 0.3rem 0.6rem;
+    }
+
+    .users-container {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+
+    .users-container.open {
+      display: block;
+    }
+
+    .user-list {
+      margin-bottom: 1.5rem;
+    }
+
+    .user-item {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .user-metric {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .user-savings {
+      color: var(--trust-blue);
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+
+    .dictation-container {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .dictation-title {
+      color: var(--danger);
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .dictation-item {
+      background: #fee2e2;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid #fecaca;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dictation-metric {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--danger);
+    }
+
+    .chart-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      margin: 1.5rem 0;
+      border: 1px solid var(--border);
+    }
+
+    .dictation-chart {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+
+    .loading,
+    .error {
+      text-align: center;
+      padding: 2rem;
+      border-radius: 12px;
+      margin: 1rem 0;
+    }
+
+    .loading {
+      color: #64748b;
+      background: #f8fafc;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .footer {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-top: 3rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .calculator-panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+      font-size: 0.95rem;
+    }
+
+    .calculator-title {
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .calculator-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .calculator-row label {
+      min-width: 180px;
+      font-weight: 600;
+    }
+
+    .calculator-row input {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 100px;
+    }
+
+    .calculator-result {
+      background: #f1f5f9;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-top: 0.5rem;
+    }
+
+    .calculator-result strong {
+      color: var(--text);
+    }
+
+    .savings-banner {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      color: white;
+      padding: 1.25rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.3);
+      display: none;
+    }
+
+    .savings-banner.visible {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    .savings-banner-content {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .savings-stat {
+      text-align: center;
+    }
+
+    .savings-stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .savings-stat-label {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      font-weight: 500;
+    }
+
+    .savings-stat-sublabel {
+      font-size: 0.75rem;
+      opacity: 0.85;
+      font-weight: 400;
+      margin-top: 0.25rem;
+    }
   </style>
 </head>
+
 <body>
   <div id="loginScreen" class="login-screen">
     <div class="login-box">
@@ -129,8 +640,16 @@
       <p class="login-subtitle">Մուտքագրեք գաղտնաբառը վերլուծության մուտք գործելու համար</p>
       <div class="login-error" id="loginError">Սխալ գաղտնաբառ։ Խնդրում ենք կրկին փորձել։</div>
       <div class="password-wrapper">
-        <input type="password" id="passwordInput" class="login-input" placeholder="Մուտքագրեք գաղտնաբառը" autocomplete="off">
-        <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">Eye</button>
+        <input 
+          type="password" 
+          id="passwordInput" 
+          class="login-input" 
+          placeholder="Մուտքագրեք գաղտնաբառը"
+          autocomplete="off"
+        >
+        <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+          👁
+        </button>
       </div>
       <button class="login-btn" onclick="handleLogin()">Մուտք գործել վահանակ</button>
     </div>
@@ -142,7 +661,6 @@
         <h1>Productivity Dashboard</h1>
         <p class="subtitle" id="subtitle">All time in HOURS • Red = Wasted Time at 20 WPM</p>
       </header>
-
       <div class="controls">
         <button onclick="loadData()">Refresh Data</button>
         <button id="dictationToggle" onclick="toggleDictation()" style="display:none;">Show Dictation Data</button>
@@ -178,21 +696,22 @@
               style="width:100%; max-width:120px; font-size:1.1rem; padding:0.6rem;">
           </div>
           <div style="display:flex; gap:2rem; font-size:1.1rem; font-weight:600; color:var(--text);">
-            <div><strong id="totalUsers">0</strong> բժիշկ զտված բաժիններում</div>
-            <div><strong id="activeDepts">0</strong> բաժին<span id="deptPlural"></span></div>
+            <div>
+              <strong id="totalUsers">0</strong> բժիշկ զտված բաժիններում
+            </div>
+            <div>
+              <strong id="activeDepts">0</strong> բաժին<span id="deptPlural"></span>
+            </div>
           </div>
         </div>
       </div>
 
       <div id="loading" class="loading">Սեղմեք «Թարմացնել տվյալները» բեռնելու համար...</div>
       <div id="error" class="error" style="display:none;"></div>
-
       <div id="chartContainer" class="chart-container" style="display:none;">
         <canvas id="deptChart"></canvas>
       </div>
-
       <div id="departments"></div>
-
       <div id="dictationSection" class="dictation-container hidden">
         <h2 class="dictation-title">Դիկտացիայի տվյալներ (Նիշեր/օր)</h2>
         <div id="dictationList"></div>
@@ -200,7 +719,6 @@
           <canvas id="dictationChart"></canvas>
         </div>
       </div>
-
       <div class="footer">
         Միայն ձեռքով թարմացում • 1 ժամ խնայվում է 60,000 նիշի համար • Տպագրում՝ 20 բառ/րոպե
       </div>
@@ -210,6 +728,25 @@
   <script>
     const CORRECT_PASSWORD = "erebuni2024";
     const AUTH_KEY = 'productivity_auth';
+    
+    // Dictation users data (chars/day) - these are the ONLY users for MRT and CT departments
+    const DICTATION_USERS = [
+      { name: 'Hamaspyur', dept: 'CT', chars: 19121.24 },
+      { name: 'Karine', dept: 'CT', chars: 18088.50 },
+      { name: 'Lusine', dept: 'CT', chars: 11931.9 },
+      { name: 'Eva', dept: 'MRT', chars: 11263.67 },
+      { name: 'Zhanna', dept: 'MRT', chars: 12370.8 },
+      { name: 'Hayk', dept: 'CT', chars: 4754.47 },
+      { name: 'Gayane', dept: 'CT', chars: 9581.0 },
+      { name: 'Vigen', dept: 'CT', chars: 6928.0 },
+      { name: 'Sveta', dept: 'MRT', chars: 3362.0 },
+      { name: 'Rima', dept: 'MRT', chars: 3428.0 },
+      { name: 'Eduard', dept: 'MRT', chars: 2138.5 },
+      { name: 'Margarita', dept: 'CT', chars: 1906.00 },
+      { name: 'Mikhayil', dept: 'MRT', chars: 1250.0 },
+      { name: 'Susanna', dept: 'CT', chars: 0.00 }
+    ];
+    
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
     const DICTATION_URL = DATA_URL + "dictation";
     const CHARS_PER_HOUR_SAVED = 60_000;
@@ -220,25 +757,7 @@
     const STORAGE_KEY_TYPING = 'productivity_typing_data';
     const STORAGE_KEY_DICTATION = 'productivity_dictation_data';
     const STORAGE_KEY_TIMESTAMP = 'productivity_data_timestamp';
-
-    // === ՁԵՐ ՑԱՆԿԸ ===
-    const DICTATION_USERS = [
-      { name: 'Hamaspyur_Ctomography', dept: 'CT', chars: 19121.24 },
-      { name: 'Karine_Ctomography', dept: 'CT', chars: 18088.50 },
-      { name: 'Lusine_Ctomography', dept: 'CT', chars: 11931.9 },
-      { name: 'Eva_Mrt', dept: 'MRT', chars: 11263.67 },
-      { name: 'Zhanna_Mrt', dept: 'MRT', chars: 12370.8 },
-      { name: 'Hayk_Ctomography', dept: 'CT', chars: 4754.47 },
-      { name: 'Gayane_Ctomography', dept: 'CT', chars: 9581.0 },
-      { name: 'Vigen_Ctomography', dept: 'CT', chars: 6928.0 },
-      { name: 'Sveta_Mrt', dept: 'MRT', chars: 3362.0 },
-      { name: 'Rima_Mrt', dept: 'MRT', chars: 3428.0 },
-      { name: 'Eduard_Mrt', dept: 'MRT', chars: 2138.5 },
-      { name: 'Margarita_Ctomography', dept: 'CT', chars: 1906.00 },
-      { name: 'Mikhayil_Mrt', dept: 'MRT', chars: 1250.0 },
-      { name: 'Susanna_Ctomography', dept: 'CT', chars: 0.00 }
-    ];
-
+    
     let rawDataTyping = [];
     let rawDataDictation = [];
     let departments = {};
@@ -247,16 +766,11 @@
     let isDictationVisible = false;
     let currentMinHrs = 0;
 
-    // === ՆՈՐ Ֆունկցիա ===
-    function isDictationUser(hostname) {
-      const key = hostname.toLowerCase().replace(/[\s-]/g, '_');
-      return DICTATION_USERS.find(u => u.name.toLowerCase() === key);
-    }
-
     function handleLogin() {
       const input = document.getElementById('passwordInput');
       const error = document.getElementById('loginError');
       const password = input.value.trim();
+
       if (password === CORRECT_PASSWORD) {
         localStorage.setItem(AUTH_KEY, 'true');
         document.getElementById('loginScreen').classList.add('hidden');
@@ -271,33 +785,84 @@
       }
     }
 
-    function checkAuth() { return localStorage.getItem(AUTH_KEY) === 'true'; }
+    function checkAuth() {
+      return localStorage.getItem(AUTH_KEY) === 'true';
+    }
 
     function togglePasswordVisibility() {
       const input = document.getElementById('passwordInput');
-      input.type = input.type === 'password' ? 'text' : 'password';
+      const btn = event.target;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '👁';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+      }
     }
 
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
-      const excluded = ['zhenya', 'pahest', 'oper', 'buleten', 'aphoteka', 'archiv', 'arxiv', 'premium', 'comfort', 'inform', 'opersroom', 'lawyer', 'statistic', 'radiology', 'tntes', 'manage', 'luso', 'windows'];
-      if (excluded.some(e => lower.includes(e))) return null;
+
+      // Excluded departments - return null to filter them out
+      const excluded = ['zhenya', 'pahest', 'oper', 'buleten', 'aphoteka', 'archiv', 'arxiv', 
+                       'premium', 'comfort', 'inform', 'opersroom', 'lawyer', 'confortp', 
+                       'statistic', 'radiology', 'tntes', 'manage', 'luso', 'windows'];
+      
+      for (const exc of excluded) {
+        if (lower.includes(exc)) return null;
+      }
+
       if (lower.includes('ctomography')) return 'CT';
-      if (lower.includes('mrt') || lower.includes('mrtdoc')) return 'MRT';
-      const map = { 'cardio': 'Cardiology', 'vascular': 'Vascular', 'urology': 'Urology', 'lor': 'LOR' };
-      for (const [k, v] of Object.entries(map)) if (lower.includes(k)) return v;
-      return null;
+      if (lower.includes('cardiopulm')) return 'Cardio-Pulm';
+      if (lower.includes('cardiobit')) return 'Cardio-Bit';
+      if (lower.includes('cardiodoc')) return 'Cardio-Doc';
+      if (lower.includes('cardiopost')) return 'Cardio-Post';
+      if (lower.includes('mcardio')) return 'Cardio-Pulm';
+      if (lower.includes('cardio')) return 'Cardiology';
+
+      const map = {
+        'x-ray': 'X-Ray', 'xray': 'X-Ray',
+        'mrt': 'MRT', 'mrtdoc': 'MRT',
+        'emerg': 'Emergency', 'emergp': 'Emergency',
+        'ortho': 'Orthopedics', 'orthopedy': 'Orthopedics',
+        'mat': 'Maternity', 'maternity': 'Maternity', 'matlux': 'Maternity',
+        'vascular': 'Vascular',
+        'reanim': 'Reanimation',
+        'urology': 'Urology',
+        'lor': 'LOR'
+      };
+      for (const [key, name] of Object.entries(map)) {
+        if (lower.includes(key)) return name;
+      }
+
+      return hostname.split(/[\d-]/)[0].replace(/\b\w/g, c => c.toUpperCase());
     }
 
-    function isDictationDepartment(dept) { return dept === 'MRT' || dept === 'CT'; }
+    function isDictationDepartment(dept) {
+      return dept === 'MRT' || dept === 'CT';
+    }
+
+    function getUserKey(hostname) {
+      return hostname.toLowerCase().replace(/[\s-]/g, '_');
+    }
 
     async function loadData() {
       if (!checkAuth()) return;
+      
       const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const deptsDiv = document.getElementById('departments');
+      const chartContainer = document.getElementById('chartContainer');
       loading.style.display = 'block';
       loading.textContent = 'Loading typing data...';
+      error.style.display = 'none';
+      deptsDiv.innerHTML = '';
+      chartContainer.style.display = 'none';
       try {
         const res = await fetch(DATA_URL + '?t=' + Date.now());
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const text = await res.text();
         rawDataTyping = text.trim().split('\n')
           .map(l => l.trim())
@@ -311,10 +876,10 @@
             return { hostname, chars, original: hostPart };
           })
           .filter(Boolean);
-
+        
         localStorage.setItem(STORAGE_KEY_TYPING, JSON.stringify(rawDataTyping));
         localStorage.setItem(STORAGE_KEY_TIMESTAMP, new Date().toISOString());
-
+        
         processData();
         document.getElementById('filterPanel').style.display = 'block';
         document.getElementById('minHrsFilter').value = '0';
@@ -322,88 +887,131 @@
         renderDepartments();
         renderDeptChart();
         loading.style.display = 'none';
-        document.getElementById('chartContainer').style.display = 'block';
+        chartContainer.style.display = 'block';
         document.getElementById('subtitle').textContent = 'Ամբողջ ժամանակը ԺԱՄԵՐՈՎ • Կարմիր = Կորած ժամանակ (Տպագրում) • Կանաչ = Խնայված ժամանակ (Դիկտացիա)';
         document.getElementById('dictationToggle').style.display = 'inline-block';
         updateLastRefreshTime();
       } catch (err) {
         loading.style.display = 'none';
-        document.getElementById('error').style.display = 'block';
-        document.getElementById('error').textContent = `Սխալ: ${err.message}`;
+        error.style.display = 'block';
+        error.textContent = `Սխալ: ${err.message}`;
       }
     }
 
-    function processData() {
+    async function loadDictationData() {
+      const loading = document.getElementById('loading');
+      loading.style.display = 'block';
+      loading.textContent = 'Բեռնվում են դիկտացիայի տվյալները...';
+      try {
+        const res = await fetch(DICTATION_URL + '?t=' + Date.now());
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        rawDataDictation = text.trim().split('\n')
+          .map(l => l.trim())
+          .filter(l => l.includes('|'))
+          .map(l => {
+            const [hostPart, avgPart] = l.split('|').map(s => s.trim());
+            const hostname = hostPart.split(' ')[0].toLowerCase();
+            const match = avgPart.match(/([\d,]+\.?\d*)/);
+            if (!match) return null;
+            const chars = parseFloat(match[1].replace(/,/g, ''));
+            return { hostname, chars, original: hostPart };
+          })
+          .filter(Boolean);
+        
+        localStorage.setItem(STORAGE_KEY_DICTATION, JSON.stringify(rawDataDictation));
+        
+        renderDictationData();
+        loading.style.display = 'none';
+      } catch (err) {
+        loading.style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').textContent = `Դիկտացիա բեռնելու սխալ: ${err.message}`;
+      }
+    }
+
+function processData() {
       departments = {};
-
-      // === MRT & CT: ՄԻԱՅՆ Ձեր ցանկից ===
-      ['MRT', 'CT'].forEach(dept => {
-        const users = DICTATION_USERS.filter(u => u.dept === dept);
-        if (users.length === 0) return;
-        departments[dept] = { users: [], total: 0, count: 0, activeCount: 0, isDictation: true };
-        sortStates[dept] = { type: 'avg', dir: 'desc' };
-
-        users.forEach(u => {
-          const item = { original: u.name, chars: u.chars, isActive: u.chars >= 1000, isDictationUser: true };
-          departments[dept].users.push(item);
-          if (item.isActive) {
-            departments[dept].total += u.chars;
-            departments[dept].activeCount += 1;
-          }
-        });
-      });
-
-      // === Այլ բաժիններ: rawData-ից ===
       rawDataTyping.forEach(item => {
         const dept = extractDepartment(item.hostname);
-        if (!dept || dept === 'MRT' || dept === 'CT') return;
+        
+        // Skip excluded departments
+        if (!dept) return;
+        
         if (!departments[dept]) {
-          departments[dept] = { users: [], total: 0, count: 0, activeCount: 0, isDictation: false };
+          departments[dept] = { users: [], total: 0, count: 0, activeCount: 0, isDictation: isDictationDepartment(dept) };
           sortStates[dept] = { type: 'avg', dir: 'desc' };
         }
-        item.isActive = item.chars >= 2000;
-        item.isDictationUser = false;
+        
+        item.originalChars = item.chars;
+        const userKey = getUserKey(item.original);
+        
+        // For MRT and CT departments, use dictation data
+        if (departments[dept].isDictation && DICTATION_USERS[userKey] !== undefined) {
+          item.dictationChars = DICTATION_USERS[userKey];
+          item.chars = item.dictationChars;
+          item.isDictationUser = true;
+        } else {
+          item.isDictationUser = false;
+        }
+        
         departments[dept].users.push(item);
-        if (item.isActive) {
+        if (item.chars >= 2000) {
+          item.isActive = true;
           departments[dept].total += item.chars;
+          departments[dept].count += 1;
           departments[dept].activeCount += 1;
+        } else {
+          item.isActive = false;
         }
       });
 
-      // Հաշվարկներ
       Object.keys(departments).forEach(dept => {
         const d = departments[dept];
         if (d.isDictation) {
+          // For dictation departments, show time saved (current time with dictation)
           d.currentTimeWithDictation = d.total / CHARS_PER_HOUR_TYPED;
           d.wouldBeWastedTime = d.currentTimeWithDictation * DICTATION_SPEEDUP;
           d.timeSaved = d.wouldBeWastedTime - d.currentTimeWithDictation;
           d.avgCurrentTimePerDoc = d.activeCount > 0 ? d.currentTimeWithDictation / d.activeCount : 0;
         } else {
+          // For typing departments, show wasted time
           d.totalWastedHrs = d.total / CHARS_PER_HOUR_TYPED;
           d.avgWastedHrsPerDoc = d.activeCount > 0 ? d.totalWastedHrs / d.activeCount : 0;
+          d.avgCharsPerDoc = d.activeCount > 0 ? d.total / d.activeCount : 0;
           d.timeWithDictation = d.totalWastedHrs / DICTATION_SPEEDUP;
         }
       });
     }
-
-    // === Մնացած ֆունկցիաները նույնն են (renderDepartments, renderUserSection, և այլն) ===
-    // (Կրճատված է, բայց ամբողջությամբ պահպանված է նախորդ կոդից)
-
+    
     function getFilteredDepartments() {
       const filtered = Object.entries(departments)
         .filter(([deptName, data]) => {
-          if (data.isDictation) return true;
+          // For dictation departments, always show them (no filtering by hours)
+          if (data.isDictation) {
+            return true;
+          }
+          
+          // For typing departments, apply the filter
           const deptHrs = Math.round(data.avgWastedHrsPerDoc * 10) / 10;
           const threshold = Math.round(currentMinHrs * 10) / 10;
-          return deptHrs >= threshold;
+          const meetsThreshold = deptHrs >= threshold;
+          
+          if (currentMinHrs > 0) {
+            console.log(`${deptName}: ${deptHrs.toFixed(1)} hrs/doc (threshold: ${threshold.toFixed(1)}) ${meetsThreshold ? '✓' : '✗'}`);
+          }
+          return meetsThreshold;
         })
         .sort((a, b) => {
+          // Sort dictation departments first, then by total hours
           if (a[1].isDictation && !b[1].isDictation) return -1;
           if (!a[1].isDictation && b[1].isDictation) return 1;
+          
           const aHours = a[1].isDictation ? a[1].currentTimeWithDictation : a[1].totalWastedHrs;
           const bHours = b[1].isDictation ? b[1].currentTimeWithDictation : b[1].totalWastedHrs;
           return bHours - aHours;
         });
+      
       return filtered;
     }
 
@@ -411,47 +1019,76 @@
       const container = document.getElementById('departments');
       container.innerHTML = '';
       const filtered = getFilteredDepartments();
+
       filtered.forEach(([dept, data]) => {
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
+        
         if (data.isDictation) {
+          // Dictation departments: Show time saved by using dictation
           deptCard.innerHTML = `
             <div class="dept-header" onclick="toggleUsers('${dept}')">
               <div>
-                <div class="dept-name">${dept} Dictation</div>
-                <div class="dept-metric" style="color:var(--success);">
+                <div class="dept-name">${dept} 🎤</div>
+                <div class="dept-metric" style="color:var(--success); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
                   ~${data.currentTimeWithDictation.toFixed(1)} ժ/օր (դիկտացիայով)
                 </div>
-                <div style="color:var(--trust-blue); font-weight:700;">
-                  Խնայում է ${data.timeSaved.toFixed(1)} ժ/օր
+                <div style="color:var(--trust-blue); font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
+                  Խնայում է ${data.timeSaved.toFixed(1)} ժ/օր տպագրման հետ համեմատ
                 </div>
                 <div class="dept-subtext">
-                  ${data.activeCount} ակտիվ • ${data.total.toLocaleString()} նիշ
+                  ${data.activeCount} ակտիվ ռադիոլոգ${data.activeCount !== 1 ? 'ներ' : ''} •
+                  ${data.total.toLocaleString()} նիշ դիկտացվել է/օր
+                </div>
+                <div class="savings-info visible" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: var(--success);">
+                  <div class="savings-header">
+                    <span class="savings-icon">⚡</span>
+                    <span class="savings-title" style="color: var(--success);">Ժամանակի արդյունավետություն դիկտացիայով</span>
+                  </div>
+                  <div class="savings-comparison">
+                    <div class="comparison-item">
+                      <div class="comparison-label">Ներկայումս (Դիկտացիա)</div>
+                      <div class="comparison-value after">${data.currentTimeWithDictation.toFixed(1)} ժ</div>
+                    </div>
+                    <div class="comparison-item">
+                      <div class="comparison-label">Կլիներ (Տպագրում)</div>
+                      <div class="comparison-value before">${data.wouldBeWastedTime.toFixed(1)} ժ</div>
+                    </div>
+                  </div>
+                  <div class="savings-subtext" style="color: #065f46; margin-top:0.5rem;">
+                    Դիկտացիան 3 անգամ ավելի արագ է - խնայում է ${((data.timeSaved / data.wouldBeWastedTime) * 100).toFixed(0)}% ժամանակ օրական
+                  </div>
                 </div>
               </div>
-              <div class="dept-toggle">Down Arrow</div>
+              <div class="dept-toggle">▼</div>
             </div>
             <div id="users-${dept}" class="users-container"></div>
           `;
         } else {
+          // Typing departments: Show wasted time
           deptCard.innerHTML = `
             <div class="dept-header" onclick="toggleUsers('${dept}')">
               <div>
                 <div class="dept-name">${dept}</div>
-                <div class="dept-metric" style="color:var(--danger);">
+                <div class="dept-metric" style="color:var(--danger); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
                   ~${data.totalWastedHrs.toFixed(1)} կորած ժ/օր
                 </div>
+                <div style="color:#6b7280; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
+                  ${data.avgWastedHrsPerDoc.toFixed(1)} ժ/բժիշկ (միջին)
+                </div>
                 <div class="dept-subtext">
-                  ${data.activeCount} ակտիվ • ${data.total.toLocaleString()} նիշ
+                  ${data.activeCount} ակտիվ բժիշկ${data.activeCount !== 1 ? 'ներ' : ''} •
+                  ${data.total.toLocaleString()} նիշ ընդամենը
                 </div>
               </div>
-              <div class="dept-toggle">Down Arrow</div>
+              <div class="dept-toggle">▼</div>
             </div>
             <div id="users-${dept}" class="users-container"></div>
           `;
         }
         container.appendChild(deptCard);
       });
+
       updateFilterStats();
     }
 
@@ -913,8 +1550,18 @@
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainContent').classList.add('visible');
       }
-      loadData();
+      
+      document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          handleLogin();
+        }
+      });
+      
+      loadCachedData();
     });
+
+    document.getElementById('minHrsFilter').addEventListener('input', applyFilter);
   </script>
 </body>
+
 </html>
