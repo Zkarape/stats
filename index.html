@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Արտադրողականության վահանակ</title>
+  <title>Տպելու/Թելադրելու Ստատիստիկա</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -647,9 +647,9 @@
 <body>
   <div id="loginScreen" class="login-screen">
     <div class="login-box">
-      <img src="erebuni.png" alt="Էրեբունի բժշկական կենտրոն" class="login-logo">
-      <h2 class="login-title">Արտադրողականության վահանակ</h2>
-      <p class="login-subtitle">Մուտքագրեք գաղտնաբառը վերլուծության մուտք գործելու համար</p>
+      <img src="doccy.png" alt="Doccy" class="login-logo">
+      <h2 class="login-title">Տպելու/Թելադրելու Ստատիստիկա</h2>
+      <p class="login-subtitle">Մուտքագրեք գաղտնաբառը ներհիվանդանոցային տվյալներին հասանելիություն ունենալու համար</p>
       <div class="login-error" id="loginError">Սխալ գաղտնաբառ։ Խնդրում ենք կրկին փորձել։</div>
       <div class="password-wrapper">
         <input type="password" id="passwordInput" class="login-input" placeholder="Մուտքագրեք գաղտնաբառը"
@@ -670,7 +670,6 @@
       </header>
       <div class="controls">
         <button onclick="loadData()">Refresh Data</button>
-        <button id="dictationToggle" onclick="toggleDictation()" style="display:none;">Show Dictation Data</button>
       </div>
 
       <div id="savingsBanner" class="savings-banner" style="display:none;">
@@ -1383,97 +1382,97 @@
       });
     }
 
-    window.toggleDictation = function () {
-      const btn = document.getElementById('dictationToggle');
-      const deptsDiv = document.getElementById('departments');
-      const chartContainer = document.getElementById('chartContainer');
-      const dictationSection = document.getElementById('dictationSection');
-      const subtitle = document.getElementById('subtitle');
-      const filterPanel = document.getElementById('filterPanel');
+    // window.toggleDictation = function () {
+    //   const btn = document.getElementById('dictationToggle');
+    //   const deptsDiv = document.getElementById('departments');
+    //   const chartContainer = document.getElementById('chartContainer');
+    //   const dictationSection = document.getElementById('dictationSection');
+    //   const subtitle = document.getElementById('subtitle');
+    //   const filterPanel = document.getElementById('filterPanel');
 
-      if (isDictationVisible) {
-        dictationSection.classList.add('hidden');
-        deptsDiv.classList.remove('hidden');
-        chartContainer.style.display = 'block';
-        filterPanel.style.display = 'block';
-        subtitle.textContent = 'Ամբողջ ժամանակը ԺԱՄԵՐՈՎ • Կարմիր = Կորած ժամանակ (Տպագրում) • Կանաչ = Խնայված ժամանակ (Դիկտացիա)';
-        btn.textContent = 'Ցուցադրել դիկտացիայի տվյալները';
-        btn.classList.remove('dictation-btn');
-        isDictationVisible = false;
-      } else {
-        if (rawDataDictation.length === 0) {
-          loadDictationData();
-        } else {
-          renderDictationData();
-        }
-        deptsDiv.classList.add('hidden');
-        chartContainer.style.display = 'none';
-        filterPanel.style.display = 'none';
-        dictationSection.classList.remove('hidden');
-        btn.textContent = 'Թաքցնել դիկտացիայի տվյալները';
-        btn.classList.add('dictation-btn');
-        subtitle.textContent = 'Դիկտացիայի տվյալներ • Կարմիր = Խնայված ժամանակ դիկտացիայի միջոցով';
-        isDictationVisible = true;
-      }
-    };
+    //   if (isDictationVisible) {
+    //     dictationSection.classList.add('hidden');
+    //     deptsDiv.classList.remove('hidden');
+    //     chartContainer.style.display = 'block';
+    //     filterPanel.style.display = 'block';
+    //     subtitle.textContent = 'Ամբողջ ժամանակը ԺԱՄԵՐՈՎ • Կարմիր = Կորած ժամանակ (Տպագրում) • Կանաչ = Խնայված ժամանակ (Դիկտացիա)';
+    //     btn.textContent = 'Ցուցադրել դիկտացիայի տվյալները';
+    //     btn.classList.remove('dictation-btn');
+    //     isDictationVisible = false;
+    //   } else {
+    //     if (rawDataDictation.length === 0) {
+    //       loadDictationData();
+    //     } else {
+    //       renderDictationData();
+    //     }
+    //     deptsDiv.classList.add('hidden');
+    //     chartContainer.style.display = 'none';
+    //     filterPanel.style.display = 'none';
+    //     dictationSection.classList.remove('hidden');
+    //     btn.textContent = 'Թաքցնել դիկտացիայի տվյալները';
+    //     btn.classList.add('dictation-btn');
+    //     subtitle.textContent = 'Դիկտացիայի տվյալներ • Կարմիր = Խնայված ժամանակ դիկտացիայի միջոցով';
+    //     isDictationVisible = true;
+    //   }
+    // };
 
-    function renderDictationData() {
-      const list = document.getElementById('dictationList');
-      const sortedData = [...rawDataDictation].sort((a, b) => b.chars - a.chars);
-      list.innerHTML = '';
-      sortedData.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dictation-item';
-        div.innerHTML = `
-          <div class="user-name">${item.original}</div>
-          <div class="dictation-metric">${item.chars.toLocaleString()} chars/day</div>
-        `;
-        list.appendChild(div);
-      });
-      renderDictationChart(sortedData);
-    }
+    // function renderDictationData() {
+    //   const list = document.getElementById('dictationList');
+    //   const sortedData = [...rawDataDictation].sort((a, b) => b.chars - a.chars);
+    //   list.innerHTML = '';
+    //   sortedData.forEach(item => {
+    //     const div = document.createElement('div');
+    //     div.className = 'dictation-item';
+    //     div.innerHTML = `
+    //       <div class="user-name">${item.original}</div>
+    //       <div class="dictation-metric">${item.chars.toLocaleString()} chars/day</div>
+    //     `;
+    //     list.appendChild(div);
+    //   });
+    //   renderDictationChart(sortedData);
+    // }
 
-    function renderDictationChart(data) {
-      const topData = data.slice(0, 10);
-      const ctx = document.getElementById('dictationChart').getContext('2d');
-      const labels = topData.map(u => u.original.split(' ')[0]);
-      const charsData = topData.map(u => u.chars);
-      if (window.dictationChart && typeof window.dictationChart.destroy === 'function') {
-        window.dictationChart.destroy();
-      }
-      window.dictationChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Օրական նիշեր (Դիկտացված)',
-              data: charsData,
-              backgroundColor: 'rgba(239, 68, 68, 0.8)',
-              borderColor: 'rgba(239, 68, 68, 1)',
-              borderWidth: 1,
-            }
-          ]
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} նիշ/օր` } }
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              title: { display: true, text: 'Նիշեր օրական' }
-            },
-            y: {
-              grid: { display: false }
-            }
-          }
-        }
-      });
-    }
+    // function renderDictationChart(data) {
+    //   const topData = data.slice(0, 10);
+    //   const ctx = document.getElementById('dictationChart').getContext('2d');
+    //   const labels = topData.map(u => u.original.split(' ')[0]);
+    //   const charsData = topData.map(u => u.chars);
+    //   if (window.dictationChart && typeof window.dictationChart.destroy === 'function') {
+    //     window.dictationChart.destroy();
+    //   }
+    //   window.dictationChart = new Chart(ctx, {
+    //     type: 'bar',
+    //     data: {
+    //       labels,
+    //       datasets: [
+    //         {
+    //           label: 'Օրական նիշեր (Դիկտացված)',
+    //           data: charsData,
+    //           backgroundColor: 'rgba(239, 68, 68, 0.8)',
+    //           borderColor: 'rgba(239, 68, 68, 1)',
+    //           borderWidth: 1,
+    //         }
+    //       ]
+    //     },
+    //     options: {
+    //       indexAxis: 'y',
+    //       responsive: true,
+    //       plugins: {
+    //         legend: { position: 'top' },
+    //         tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} նիշ/օր` } }
+    //       },
+    //       scales: {
+    //         x: {
+    //           beginAtZero: true,
+    //           title: { display: true, text: 'Նիշեր օրական' }
+    //         },
+    //         y: {
+    //           grid: { display: false }
+    //         }
+    //       }
+    //     }
+    //   });
+    // }
 
     function updateFilterStats() {
       const filtered = getFilteredDepartments();
