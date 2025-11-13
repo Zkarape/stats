@@ -54,6 +54,7 @@
         opacity: 0;
         transform: translateY(-30px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -126,9 +127,19 @@
     }
 
     @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-10px); }
-      75% { transform: translateX(10px); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-10px);
+      }
+
+      75% {
+        transform: translateX(10px);
+      }
     }
 
     .login-btn {
@@ -332,6 +343,7 @@
         opacity: 0;
         transform: translateY(-10px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -640,13 +652,8 @@
       <p class="login-subtitle">Մուտքագրեք գաղտնաբառը վերլուծության մուտք գործելու համար</p>
       <div class="login-error" id="loginError">Սխալ գաղտնաբառ։ Խնդրում ենք կրկին փորձել։</div>
       <div class="password-wrapper">
-        <input 
-          type="password" 
-          id="passwordInput" 
-          class="login-input" 
-          placeholder="Մուտքագրեք գաղտնաբառը"
-          autocomplete="off"
-        >
+        <input type="password" id="passwordInput" class="login-input" placeholder="Մուտքագրեք գաղտնաբառը"
+          autocomplete="off">
         <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
           👁
         </button>
@@ -728,7 +735,7 @@
   <script>
     const CORRECT_PASSWORD = "erebuni2024";
     const AUTH_KEY = 'productivity_auth';
-    
+
     // Dictation users data (chars/day) - these are the ONLY users for MRT and CT departments
     const DICTATION_USERS = [
       { name: 'Hamaspyur', dept: 'CT', chars: 19121.24 },
@@ -746,7 +753,7 @@
       { name: 'Mikhayil', dept: 'MRT', chars: 1250.0 },
       { name: 'Susanna', dept: 'CT', chars: 0.00 }
     ];
-    
+
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
     const DICTATION_URL = DATA_URL + "dictation";
     const CHARS_PER_HOUR_SAVED = 60_000;
@@ -757,7 +764,7 @@
     const STORAGE_KEY_TYPING = 'productivity_typing_data';
     const STORAGE_KEY_DICTATION = 'productivity_dictation_data';
     const STORAGE_KEY_TIMESTAMP = 'productivity_data_timestamp';
-    
+
     let rawDataTyping = [];
     let rawDataDictation = [];
     let departments = {};
@@ -792,7 +799,7 @@
     function togglePasswordVisibility() {
       const input = document.getElementById('passwordInput');
       const btn = event.target;
-      
+
       if (input.type === 'password') {
         input.type = 'text';
         btn.textContent = '👁';
@@ -806,10 +813,10 @@
       const lower = hostname.toLowerCase();
 
       // Excluded departments - return null to filter them out
-      const excluded = ['zhenya', 'pahest', 'oper', 'buleten', 'aphoteka', 'archiv', 'arxiv', 
-                       'premium', 'comfort', 'inform', 'opersroom', 'lawyer', 'confortp', 
-                       'statistic', 'radiology', 'tntes', 'manage', 'luso', 'windows'];
-      
+      const excluded = ['zhenya', 'pahest', 'oper', 'buleten', 'aphoteka', 'archiv', 'arxiv',
+        'premium', 'comfort', 'inform', 'opersroom', 'lawyer', 'confortp',
+        'statistic', 'radiology', 'tntes', 'manage', 'luso', 'windows'];
+
       for (const exc of excluded) {
         if (lower.includes(exc)) return null;
       }
@@ -850,7 +857,7 @@
 
     async function loadData() {
       if (!checkAuth()) return;
-      
+
       const loading = document.getElementById('loading');
       const error = document.getElementById('error');
       const deptsDiv = document.getElementById('departments');
@@ -876,10 +883,10 @@
             return { hostname, chars, original: hostPart };
           })
           .filter(Boolean);
-        
+
         localStorage.setItem(STORAGE_KEY_TYPING, JSON.stringify(rawDataTyping));
         localStorage.setItem(STORAGE_KEY_TIMESTAMP, new Date().toISOString());
-        
+
         processData();
         document.getElementById('filterPanel').style.display = 'block';
         document.getElementById('minHrsFilter').value = '0';
@@ -918,9 +925,9 @@
             return { hostname, chars, original: hostPart };
           })
           .filter(Boolean);
-        
+
         localStorage.setItem(STORAGE_KEY_DICTATION, JSON.stringify(rawDataDictation));
-        
+
         renderDictationData();
         loading.style.display = 'none';
       } catch (err) {
@@ -930,31 +937,63 @@
       }
     }
 
-function processData() {
+    function processData() {
       departments = {};
-      rawDataTyping.forEach(item => {
-        const dept = extractDepartment(item.hostname);
-        
-        // Skip excluded departments
-        if (!dept) return;
-        
+
+      // First, add all dictation users to their departments
+      Object.values(DICTATION_USERS).forEach(dictUser => {
+        const dept = dictUser.dept;
         if (!departments[dept]) {
-          departments[dept] = { users: [], total: 0, count: 0, activeCount: 0, isDictation: isDictationDepartment(dept) };
+          departments[dept] = {
+            users: [],
+            total: 0,
+            count: 0,
+            activeCount: 0,
+            isDictation: true
+          };
           sortStates[dept] = { type: 'avg', dir: 'desc' };
         }
-        
-        item.originalChars = item.chars;
-        const userKey = getUserKey(item.original);
-        
-        // For MRT and CT departments, use dictation data
-        if (departments[dept].isDictation && DICTATION_USERS[userKey] !== undefined) {
-          item.dictationChars = DICTATION_USERS[userKey];
-          item.chars = item.dictationChars;
-          item.isDictationUser = true;
-        } else {
-          item.isDictationUser = false;
+
+        const userItem = {
+          hostname: dictUser.name.toLowerCase(),
+          chars: dictUser.chars,
+          originalChars: dictUser.chars,
+          dictationChars: dictUser.chars,
+          isDictationUser: true,
+          original: dictUser.name,
+          isActive: dictUser.chars >= 2000
+        };
+
+        departments[dept].users.push(userItem);
+
+        if (userItem.isActive) {
+          departments[dept].total += userItem.chars;
+          departments[dept].count += 1;
+          departments[dept].activeCount += 1;
         }
-        
+      });
+
+      // Then process typing data for other departments (excluding MRT and CT)
+      rawDataTyping.forEach(item => {
+        const dept = extractDepartment(item.hostname);
+
+        // Skip excluded departments and dictation departments (MRT/CT)
+        if (!dept || isDictationDepartment(dept)) return;
+
+        if (!departments[dept]) {
+          departments[dept] = {
+            users: [],
+            total: 0,
+            count: 0,
+            activeCount: 0,
+            isDictation: false
+          };
+          sortStates[dept] = { type: 'avg', dir: 'desc' };
+        }
+
+        item.originalChars = item.chars;
+        item.isDictationUser = false;
+
         departments[dept].users.push(item);
         if (item.chars >= 2000) {
           item.isActive = true;
@@ -983,7 +1022,8 @@ function processData() {
         }
       });
     }
-    
+
+
     function getFilteredDepartments() {
       const filtered = Object.entries(departments)
         .filter(([deptName, data]) => {
@@ -991,12 +1031,12 @@ function processData() {
           if (data.isDictation) {
             return true;
           }
-          
+
           // For typing departments, apply the filter
           const deptHrs = Math.round(data.avgWastedHrsPerDoc * 10) / 10;
           const threshold = Math.round(currentMinHrs * 10) / 10;
           const meetsThreshold = deptHrs >= threshold;
-          
+
           if (currentMinHrs > 0) {
             console.log(`${deptName}: ${deptHrs.toFixed(1)} hrs/doc (threshold: ${threshold.toFixed(1)}) ${meetsThreshold ? '✓' : '✗'}`);
           }
@@ -1006,12 +1046,12 @@ function processData() {
           // Sort dictation departments first, then by total hours
           if (a[1].isDictation && !b[1].isDictation) return -1;
           if (!a[1].isDictation && b[1].isDictation) return 1;
-          
+
           const aHours = a[1].isDictation ? a[1].currentTimeWithDictation : a[1].totalWastedHrs;
           const bHours = b[1].isDictation ? b[1].currentTimeWithDictation : b[1].totalWastedHrs;
           return bHours - aHours;
         });
-      
+
       return filtered;
     }
 
@@ -1023,7 +1063,7 @@ function processData() {
       filtered.forEach(([dept, data]) => {
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
-        
+
         if (data.isDictation) {
           // Dictation departments: Show time saved by using dictation
           deptCard.innerHTML = `
@@ -1136,7 +1176,7 @@ function processData() {
 
       const list = document.getElementById(`user-list-${dept}`);
       const isDictDept = departments[dept].isDictation;
-      
+
       users.forEach(user => {
         const item = document.createElement('div');
         item.className = 'user-item';
@@ -1161,7 +1201,7 @@ function processData() {
           const currentTime = user.chars / CHARS_PER_HOUR_TYPED;
           const wouldBeTime = currentTime * DICTATION_SPEEDUP;
           const saved = wouldBeTime - currentTime;
-          
+
           item.innerHTML = `
             <div class="user-name">${user.original} 🎤</div>
             <div class="user-metric">
@@ -1174,7 +1214,7 @@ function processData() {
         } else {
           // Typing department users
           const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
-          
+
           item.innerHTML = `
             <div class="user-name">${user.original}</div>
             <div class="user-metric">
@@ -1184,7 +1224,7 @@ function processData() {
             </div>
           `;
         }
-        
+
         list.appendChild(item);
       });
 
@@ -1209,12 +1249,12 @@ function processData() {
       }
 
       let datasets;
-      
+
       if (isDictDept) {
         // For dictation departments: show current time and what it would be if typing
         const currentData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
         const wouldBeData = activeUsers.map(u => (u.chars / CHARS_PER_HOUR_TYPED) * DICTATION_SPEEDUP);
-        
+
         datasets = [
           {
             label: 'Ներկայիս ժամանակ (դիկտացիայով)',
@@ -1234,7 +1274,7 @@ function processData() {
       } else {
         // For typing departments: show wasted time
         const wastedData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
-        
+
         datasets = [{
           label: 'Ներկայիս կորած ժամանակ',
           data: wastedData,
@@ -1269,7 +1309,7 @@ function processData() {
       const input = document.getElementById('minHrsFilter');
       const value = input.value.trim();
       const newMinHrs = (value === '' || isNaN(value)) ? 0 : parseFloat(value);
-      
+
       if (newMinHrs !== currentMinHrs) {
         currentMinHrs = newMinHrs;
         console.log('Filter applied:', currentMinHrs);
@@ -1291,19 +1331,19 @@ function processData() {
 
       if (typingDepts.length > 0) {
         const wastedData = filtered.map(([_, d]) => d.isDictation ? 0 : d.totalWastedHrs);
-        datasets.push({ 
-          label: 'Ներկայիս կորած ժամանակ (Տպագրում)', 
-          data: wastedData, 
-          backgroundColor: 'rgba(239,68,68,0.9)', 
-          borderColor: 'rgba(239,68,68,1)', 
-          borderWidth: 1 
+        datasets.push({
+          label: 'Ներկայիս կորած ժամանակ (Տպագրում)',
+          data: wastedData,
+          backgroundColor: 'rgba(239,68,68,0.9)',
+          borderColor: 'rgba(239,68,68,1)',
+          borderWidth: 1
         });
       }
 
       if (dictDepts.length > 0) {
         const currentData = filtered.map(([_, d]) => d.isDictation ? d.currentTimeWithDictation : 0);
         const wouldBeData = filtered.map(([_, d]) => d.isDictation ? d.wouldBeWastedTime : 0);
-        
+
         datasets.push({
           label: 'Ներկայիս ժամանակ (դիկտացիայով)',
           data: currentData,
@@ -1311,7 +1351,7 @@ function processData() {
           borderColor: 'rgba(16, 185, 129, 1)',
           borderWidth: 1
         });
-        
+
         datasets.push({
           label: 'Կլիներ (եթե տպագրեին)',
           data: wouldBeData,
@@ -1327,9 +1367,9 @@ function processData() {
 
       window.deptChart = new Chart(ctx, {
         type: 'bar',
-        data: { 
-          labels, 
-          datasets 
+        data: {
+          labels,
+          datasets
         },
         options: {
           indexAxis: 'y',
@@ -1467,25 +1507,25 @@ function processData() {
       document.getElementById('savingsPercent').textContent = savingsPercent + '%';
     }
 
-    window.updateSort = function(dept, field, value) {
+    window.updateSort = function (dept, field, value) {
       sortStates[dept][field] = value;
       renderUserSection(dept);
     };
 
-    window.toggleUserActive = function(dept, user) {
+    window.toggleUserActive = function (dept, user) {
       user.isActive = !user.isActive;
-      
+
       const deptData = departments[dept];
       deptData.total = 0;
       deptData.activeCount = 0;
-      
+
       deptData.users.forEach(u => {
         if (u.isActive) {
           deptData.total += u.chars;
           deptData.activeCount += 1;
         }
       });
-      
+
       if (deptData.isDictation) {
         deptData.currentTimeWithDictation = deptData.total / CHARS_PER_HOUR_TYPED;
         deptData.wouldBeWastedTime = deptData.currentTimeWithDictation * DICTATION_SPEEDUP;
@@ -1496,7 +1536,7 @@ function processData() {
         deptData.avgWastedHrsPerDoc = deptData.activeCount > 0 ? deptData.totalWastedHrs / deptData.activeCount : 0;
         deptData.timeWithDictation = deptData.totalWastedHrs / DICTATION_SPEEDUP;
       }
-      
+
       renderUserSection(dept);
       renderDepartments();
       renderDeptChart();
@@ -1517,7 +1557,7 @@ function processData() {
     function loadCachedData() {
       const cachedTyping = localStorage.getItem(STORAGE_KEY_TYPING);
       const cachedDictation = localStorage.getItem(STORAGE_KEY_DICTATION);
-      
+
       if (cachedTyping) {
         try {
           rawDataTyping = JSON.parse(cachedTyping);
@@ -1535,7 +1575,7 @@ function processData() {
           console.error('Error loading cached data:', err);
         }
       }
-      
+
       if (cachedDictation) {
         try {
           rawDataDictation = JSON.parse(cachedDictation);
@@ -1550,13 +1590,13 @@ function processData() {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainContent').classList.add('visible');
       }
-      
+
       document.getElementById('passwordInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
           handleLogin();
         }
       });
-      
+
       loadCachedData();
     });
 
