@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,7 +19,6 @@
       --accent: #6366f1;
       --trust-blue: #0ea5e9;
     }
-
     .login-screen {
       position: fixed;
       top: 0;
@@ -33,11 +31,9 @@
       justify-content: center;
       z-index: 9999;
     }
-
     .login-screen.hidden {
       display: none;
     }
-
     .login-box {
       background: white;
       padding: 3rem 2.5rem;
@@ -48,7 +44,6 @@
       width: 90%;
       animation: slideIn 0.4s ease;
     }
-
     @keyframes slideIn {
       from {
         opacity: 0;
@@ -59,27 +54,23 @@
         transform: translateY(0);
       }
     }
-
     .login-logo {
       width: 220px;
       height: auto;
       margin-bottom: 2rem;
       object-fit: contain;
     }
-
     .login-title {
       font-size: 1.5rem;
       font-weight: 700;
       color: var(--text);
       margin-bottom: 0.5rem;
     }
-
     .login-subtitle {
       font-size: 0.95rem;
       color: #64748b;
       margin-bottom: 2rem;
     }
-
     .login-input {
       width: 100%;
       padding: 0.9rem 1.2rem;
@@ -89,13 +80,11 @@
       font-size: 1rem;
       transition: all 0.3s;
     }
-
     .password-wrapper {
       position: relative;
       width: 100%;
       margin-bottom: 1.5rem;
     }
-
     .password-toggle {
       position: absolute;
       right: 1rem;
@@ -109,28 +98,23 @@
       padding: 0.5rem;
       transition: color 0.2s;
     }
-
     .password-toggle:hover {
       color: var(--primary);
     }
-
     .login-input:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
-
     .login-input.error {
       border-color: var(--danger);
       animation: shake 0.4s;
     }
-
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-10px); }
       75% { transform: translateX(10px); }
     }
-
     .login-btn {
       width: 100%;
       padding: 0.9rem;
@@ -143,39 +127,31 @@
       cursor: pointer;
       transition: all 0.3s;
     }
-
     .login-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
     }
-
     .login-btn:active {
       transform: translateY(0);
     }
-
     .login-error {
       color: var(--danger);
       font-size: 0.9rem;
       margin-bottom: 1rem;
       display: none;
     }
-
     .login-error.visible {
       display: block;
     }
-
     .main-content {
       display: none;
     }
-
     .main-content.visible {
       display: block;
     }
-
     * {
       box-sizing: border-box;
     }
-
     body {
       font-family: 'Inter', sans-serif;
       background: var(--bg);
@@ -183,28 +159,23 @@
       margin: 0;
       padding: 1rem;
     }
-
     .container {
       max-width: 1200px;
       margin: 0 auto;
     }
-
     header {
       text-align: center;
       margin-bottom: 2rem;
     }
-
     h1 {
       color: var(--primary);
       font-size: 2rem;
       margin: 0 0 0.5rem;
     }
-
     .subtitle {
       color: #64748b;
       font-size: 1rem;
     }
-
     .controls {
       display: flex;
       gap: 1rem;
@@ -213,7 +184,6 @@
       justify-content: center;
       align-items: center;
     }
-
     select,
     button,
     input[type="checkbox"] {
@@ -223,12 +193,10 @@
       font-size: 1rem;
       transition: 0.2s;
     }
-
     select {
       min-width: 200px;
       background: white;
     }
-
     button {
       background: var(--primary);
       color: white;
@@ -236,28 +204,22 @@
       cursor: pointer;
       box-shadow: var(--shadow);
     }
-
     button:hover {
       background: #2563eb;
       transform: translateY(-1px);
     }
-
     .dictation-btn {
       background: var(--danger);
     }
-
     .dictation-btn:hover {
       background: #dc2626;
     }
-
     .savings-btn {
       background: var(--trust-blue);
     }
-
     .savings-btn:hover {
       background: #0284c7;
     }
-
     .view-toggle {
       display: flex;
       align-items: center;
@@ -265,11 +227,9 @@
       font-size: 0.9rem;
       color: #475569;
     }
-
     .view-toggle label {
       cursor: pointer;
     }
-
     .dept-card {
       background: var(--card);
       border-radius: 12px;
@@ -280,39 +240,32 @@
       cursor: pointer;
       transition: 0.2s;
     }
-
     .dept-card:hover {
       transform: translateY(-2px);
     }
-
     .dept-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
     .dept-name {
       font-weight: 700;
       font-size: 1.3rem;
       color: var(--primary);
     }
-
     .dept-toggle {
       font-size: 1.2rem;
       color: var(--accent);
     }
-
     .dept-metric {
       font-size: 1.6rem;
       font-weight: 800;
       margin: 0.5rem 0;
     }
-
     .dept-subtext {
       font-size: 0.9rem;
       color: #64748b;
     }
-
     .savings-info {
       background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
       border: 2px solid var(--trust-blue);
@@ -321,12 +274,10 @@
       margin-top: 1rem;
       display: none;
     }
-
     .savings-info.visible {
       display: block;
       animation: slideDown 0.3s ease;
     }
-
     @keyframes slideDown {
       from {
         opacity: 0;
@@ -337,37 +288,31 @@
         transform: translateY(0);
       }
     }
-
     .savings-header {
       display: flex;
       align-items: center;
       gap: 0.75rem;
       margin-bottom: 0.75rem;
     }
-
     .savings-icon {
       font-size: 1.5rem;
     }
-
     .savings-title {
       font-weight: 700;
       font-size: 1.1rem;
       color: var(--trust-blue);
     }
-
     .savings-metric {
       font-size: 1.4rem;
       font-weight: 800;
       color: var(--trust-blue);
       margin: 0.25rem 0;
     }
-
     .savings-subtext {
       font-size: 0.85rem;
       color: #0369a1;
       font-weight: 500;
     }
-
     .savings-comparison {
       display: flex;
       gap: 1rem;
@@ -375,11 +320,9 @@
       padding-top: 0.75rem;
       border-top: 1px solid rgba(14, 165, 233, 0.2);
     }
-
     .comparison-item {
       flex: 1;
     }
-
     .comparison-label {
       font-size: 0.75rem;
       color: #0369a1;
@@ -387,47 +330,38 @@
       text-transform: uppercase;
       margin-bottom: 0.25rem;
     }
-
     .comparison-value {
       font-size: 1.1rem;
       font-weight: 700;
     }
-
     .comparison-value.before {
       color: var(--danger);
     }
-
     .comparison-value.after {
       color: var(--trust-blue);
     }
-
     .sort-controls {
       display: flex;
       gap: 0.5rem;
       margin: 1rem 0;
       font-size: 0.85rem;
     }
-
     .sort-controls select {
       font-size: 0.8rem;
       padding: 0.3rem 0.6rem;
     }
-
     .users-container {
       margin-top: 1rem;
       padding-top: 1rem;
       border-top: 1px solid var(--border);
       display: none;
     }
-
     .users-container.open {
       display: block;
     }
-
     .user-list {
       margin-bottom: 1.5rem;
     }
-
     .user-item {
       background: #f8fafc;
       border-radius: 8px;
@@ -438,24 +372,20 @@
       justify-content: space-between;
       align-items: center;
     }
-
     .user-name {
       font-weight: 600;
       color: var(--text);
     }
-
     .user-metric {
       font-weight: 700;
       font-size: 1rem;
     }
-
     .user-savings {
       color: var(--trust-blue);
       font-size: 0.9rem;
       font-weight: 600;
       margin-left: 0.5rem;
     }
-
     .dictation-container {
       background: #fef2f2;
       border: 1px solid #fecaca;
@@ -463,7 +393,6 @@
       padding: 1.5rem;
       margin: 1.5rem 0;
     }
-
     .dictation-title {
       color: var(--danger);
       font-size: 1.3rem;
@@ -471,7 +400,6 @@
       margin-bottom: 1rem;
       text-align: center;
     }
-
     .dictation-item {
       background: #fee2e2;
       border-radius: 8px;
@@ -482,13 +410,11 @@
       justify-content: space-between;
       align-items: center;
     }
-
     .dictation-metric {
       font-weight: 700;
       font-size: 1rem;
       color: var(--danger);
     }
-
     .chart-container {
       background: white;
       padding: 1.5rem;
@@ -497,12 +423,10 @@
       margin: 1.5rem 0;
       border: 1px solid var(--border);
     }
-
     .dictation-chart {
       background: #fef2f2;
       border: 1px solid #fecaca;
     }
-
     .loading,
     .error {
       text-align: center;
@@ -510,29 +434,24 @@
       border-radius: 12px;
       margin: 1rem 0;
     }
-
     .loading {
       color: #64748b;
       background: #f8fafc;
     }
-
     .error {
       background: #fee2e2;
       color: #991b1b;
       border: 1px solid #fecaca;
     }
-
     .footer {
       text-align: center;
       color: #94a3b8;
       font-size: 0.85rem;
       margin-top: 3rem;
     }
-
     .hidden {
       display: none !important;
     }
-
     .calculator-panel {
       background: white;
       border: 1px solid var(--border);
@@ -542,14 +461,12 @@
       box-shadow: var(--shadow);
       font-size: 0.95rem;
     }
-
     .calculator-title {
       font-weight: 700;
       color: var(--text);
       margin-bottom: 1rem;
       font-size: 1.1rem;
     }
-
     .calculator-row {
       display: flex;
       align-items: center;
@@ -557,19 +474,16 @@
       margin-bottom: 0.75rem;
       flex-wrap: wrap;
     }
-
     .calculator-row label {
       min-width: 180px;
       font-weight: 600;
     }
-
     .calculator-row input {
       padding: 0.5rem 0.75rem;
       border: 1px solid var(--border);
       border-radius: 6px;
       width: 100px;
     }
-
     .calculator-result {
       background: #f1f5f9;
       padding: 0.75rem 1rem;
@@ -578,11 +492,9 @@
       color: var(--primary);
       margin-top: 0.5rem;
     }
-
     .calculator-result strong {
       color: var(--text);
     }
-
     .savings-banner {
       background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
       color: white;
@@ -592,12 +504,10 @@
       box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.3);
       display: none;
     }
-
     .savings-banner.visible {
       display: block;
       animation: slideDown 0.3s ease;
     }
-
     .savings-banner-content {
       display: flex;
       justify-content: space-around;
@@ -605,24 +515,20 @@
       flex-wrap: wrap;
       gap: 1.5rem;
     }
-
     .savings-stat {
       text-align: center;
     }
-
     .savings-stat-value {
       font-size: 2rem;
       font-weight: 800;
       display: block;
       margin-bottom: 0.25rem;
     }
-
     .savings-stat-label {
       font-size: 0.9rem;
       opacity: 0.95;
       font-weight: 500;
     }
-
     .savings-stat-sublabel {
       font-size: 0.75rem;
       opacity: 0.85;
@@ -631,7 +537,6 @@
     }
   </style>
 </head>
-
 <body>
   <div id="loginScreen" class="login-screen">
     <div class="login-box">
@@ -640,10 +545,10 @@
       <p class="login-subtitle">Մուտքագրեք գաղտնաբառը վերլուծության մուտք գործելու համար</p>
       <div class="login-error" id="loginError">Սխալ գաղտնաբառ։ Խնդրում ենք կրկին փորձել։</div>
       <div class="password-wrapper">
-        <input 
-          type="password" 
-          id="passwordInput" 
-          class="login-input" 
+        <input
+          type="password"
+          id="passwordInput"
+          class="login-input"
           placeholder="Մուտքագրեք գաղտնաբառը"
           autocomplete="off"
         >
@@ -654,7 +559,6 @@
       <button class="login-btn" onclick="handleLogin()">Մուտք գործել վահանակ</button>
     </div>
   </div>
-
   <div id="mainContent" class="main-content">
     <div class="container">
       <header>
@@ -665,7 +569,6 @@
         <button onclick="loadData()">Refresh Data</button>
         <button id="dictationToggle" onclick="toggleDictation()" style="display:none;">Show Dictation Data</button>
       </div>
-
       <div id="savingsBanner" class="savings-banner" style="display:none;">
         <div class="savings-banner-content">
           <div class="savings-stat">
@@ -684,7 +587,6 @@
           </div>
         </div>
       </div>
-
       <div id="filterPanel" class="calculator-panel" style="display:none; margin-top:1.5rem;">
         <div class="calculator-title">Զտել բաժինները ըստ միջին ժամ/բժիշկ</div>
         <div class="calculator-row" style="align-items:center; gap:1.5rem; flex-wrap:wrap;">
@@ -705,7 +607,6 @@
           </div>
         </div>
       </div>
-
       <div id="loading" class="loading">Սեղմեք «Թարմացնել տվյալները» բեռնելու համար...</div>
       <div id="error" class="error" style="display:none;"></div>
       <div id="chartContainer" class="chart-container" style="display:none;">
@@ -724,42 +625,44 @@
       </div>
     </div>
   </div>
-
   <script>
     const CORRECT_PASSWORD = "erebuni2024";
     const AUTH_KEY = 'productivity_auth';
-    
-    // Dictation users data (chars/day) - these are the ONLY users for MRT and CT departments
+
+    // === NEW: Accurate Dictation Users List ===
     const DICTATION_USERS = [
-      { name: 'Hamaspyur', dept: 'CT', chars: 19121.24 },
-      { name: 'Karine', dept: 'CT', chars: 18088.50 },
-      { name: 'Lusine', dept: 'CT', chars: 11931.9 },
-      { name: 'Eva', dept: 'MRT', chars: 11263.67 },
-      { name: 'Zhanna', dept: 'MRT', chars: 12370.8 },
-      { name: 'Hayk', dept: 'CT', chars: 4754.47 },
-      { name: 'Gayane', dept: 'CT', chars: 9581.0 },
-      { name: 'Vigen', dept: 'CT', chars: 6928.0 },
-      { name: 'Sveta', dept: 'MRT', chars: 3362.0 },
-      { name: 'Rima', dept: 'MRT', chars: 3428.0 },
-      { name: 'Eduard', dept: 'MRT', chars: 2138.5 },
-      { name: 'Margarita', dept: 'CT', chars: 1906.00 },
-      { name: 'Mikhayil', dept: 'MRT', chars: 1250.0 },
-      { name: 'Susanna', dept: 'CT', chars: 0.00 }
+      { fullName: "Hamaspyur_Ctomography", name: "Hamaspyur", dept: "CT", chars: 19121.24 },
+      { fullName: "Karine_Ctomography", name: "Karine", dept: "CT", chars: 18088.50 },
+      { fullName: "Lusine_Ctomography", name: "Lusine", dept: "CT", chars: 11931.9 },
+      { fullName: "Eva_Mrt", name: "Eva", dept: "MRT", chars: 11263.67 },
+      { fullName: "Zhanna_Mrt", name: "Zhanna", dept: "MRT", chars: 12370.8 },
+      { fullName: "Hayk_Ctomography", name: "Hayk", dept: "CT", chars: 4754.47 },
+      { fullName: "Gayane_Ctomography", name: "Gayane", dept: "CT", chars: 9581.0 },
+      { fullName: "Vigen_Ctomography", name: "Vigen", dept: "CT", chars: 6928.0 },
+      { fullName: "Sveta_Mrt", name: "Sveta", dept: "MRT", chars: 3362.0 },
+      { fullName: "Rima_Mrt", name: "Rima", dept: "MRT", chars: 3428.0 },
+      { fullName: "Eduard_Mrt", name: "Eduard", dept: "MRT", chars: 2138.5 },
+      { fullName: "Margarita_Ctomography", name: "Margarita", dept: "CT", chars: 1906.00 },
+      { fullName: "Mikhayil_Mrt", name: "Mikhayil", dept: "MRT", chars: 1250.0 },
+      { fullName: "Susanna_Ctomography", name: "Susanna", dept: "CT", chars: 0.00 }
     ];
-    
+
+    // Build lookup map: hostname → dictation data
+    const DICTATION_MAP = {};
+    DICTATION_USERS.forEach(u => {
+      DICTATION_MAP[u.fullName.toLowerCase()] = u;
+    });
+
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
-    const DICTATION_URL = DATA_URL + "dictation";
     const CHARS_PER_HOUR_SAVED = 60_000;
     const TYPING_SPEED_WPM = 16;
     const CHARS_PER_WORD = 5;
     const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60;
     const DICTATION_SPEEDUP = 3;
     const STORAGE_KEY_TYPING = 'productivity_typing_data';
-    const STORAGE_KEY_DICTATION = 'productivity_dictation_data';
     const STORAGE_KEY_TIMESTAMP = 'productivity_data_timestamp';
-    
+
     let rawDataTyping = [];
-    let rawDataDictation = [];
     let departments = {};
     let userCharts = {};
     let sortStates = {};
@@ -770,7 +673,6 @@
       const input = document.getElementById('passwordInput');
       const error = document.getElementById('loginError');
       const password = input.value.trim();
-
       if (password === CORRECT_PASSWORD) {
         localStorage.setItem(AUTH_KEY, 'true');
         document.getElementById('loginScreen').classList.add('hidden');
@@ -792,7 +694,6 @@
     function togglePasswordVisibility() {
       const input = document.getElementById('passwordInput');
       const btn = event.target;
-      
       if (input.type === 'password') {
         input.type = 'text';
         btn.textContent = '👁';
@@ -804,16 +705,13 @@
 
     function extractDepartment(hostname) {
       const lower = hostname.toLowerCase();
-
-      // Excluded departments - return null to filter them out
-      const excluded = ['zhenya', 'pahest', 'oper', 'buleten', 'aphoteka', 'archiv', 'arxiv', 
-                       'premium', 'comfort', 'inform', 'opersroom', 'lawyer', 'confortp', 
+      const excluded = ['zhenya', 'pahest', 'oper', 'buleten', 'aphoteka', 'archiv', 'arxiv',
+                       'premium', 'comfort', 'inform', 'opersroom', 'lawyer', 'confortp',
                        'statistic', 'radiology', 'tntes', 'manage', 'luso', 'windows'];
-      
+
       for (const exc of excluded) {
         if (lower.includes(exc)) return null;
       }
-
       if (lower.includes('ctomography')) return 'CT';
       if (lower.includes('cardiopulm')) return 'Cardio-Pulm';
       if (lower.includes('cardiobit')) return 'Cardio-Bit';
@@ -836,7 +734,6 @@
       for (const [key, name] of Object.entries(map)) {
         if (lower.includes(key)) return name;
       }
-
       return hostname.split(/[\d-]/)[0].replace(/\b\w/g, c => c.toUpperCase());
     }
 
@@ -844,13 +741,9 @@
       return dept === 'MRT' || dept === 'CT';
     }
 
-    function getUserKey(hostname) {
-      return hostname.toLowerCase().replace(/[\s-]/g, '_');
-    }
-
     async function loadData() {
       if (!checkAuth()) return;
-      
+
       const loading = document.getElementById('loading');
       const error = document.getElementById('error');
       const deptsDiv = document.getElementById('departments');
@@ -860,6 +753,7 @@
       error.style.display = 'none';
       deptsDiv.innerHTML = '';
       chartContainer.style.display = 'none';
+
       try {
         const res = await fetch(DATA_URL + '?t=' + Date.now());
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -876,16 +770,17 @@
             return { hostname, chars, original: hostPart };
           })
           .filter(Boolean);
-        
+
         localStorage.setItem(STORAGE_KEY_TYPING, JSON.stringify(rawDataTyping));
         localStorage.setItem(STORAGE_KEY_TIMESTAMP, new Date().toISOString());
-        
+
         processData();
         document.getElementById('filterPanel').style.display = 'block';
         document.getElementById('minHrsFilter').value = '0';
         currentMinHrs = 0;
         renderDepartments();
         renderDeptChart();
+        renderDictationData(); // Use hardcoded data
         loading.style.display = 'none';
         chartContainer.style.display = 'block';
         document.getElementById('subtitle').textContent = 'Ամբողջ ժամանակը ԺԱՄԵՐՈՎ • Կարմիր = Կորած ժամանակ (Տպագրում) • Կանաչ = Խնայված ժամանակ (Դիկտացիա)';
@@ -898,63 +793,29 @@
       }
     }
 
-    async function loadDictationData() {
-      const loading = document.getElementById('loading');
-      loading.style.display = 'block';
-      loading.textContent = 'Բեռնվում են դիկտացիայի տվյալները...';
-      try {
-        const res = await fetch(DICTATION_URL + '?t=' + Date.now());
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const text = await res.text();
-        rawDataDictation = text.trim().split('\n')
-          .map(l => l.trim())
-          .filter(l => l.includes('|'))
-          .map(l => {
-            const [hostPart, avgPart] = l.split('|').map(s => s.trim());
-            const hostname = hostPart.split(' ')[0].toLowerCase();
-            const match = avgPart.match(/([\d,]+\.?\d*)/);
-            if (!match) return null;
-            const chars = parseFloat(match[1].replace(/,/g, ''));
-            return { hostname, chars, original: hostPart };
-          })
-          .filter(Boolean);
-        
-        localStorage.setItem(STORAGE_KEY_DICTATION, JSON.stringify(rawDataDictation));
-        
-        renderDictationData();
-        loading.style.display = 'none';
-      } catch (err) {
-        loading.style.display = 'none';
-        document.getElementById('error').style.display = 'block';
-        document.getElementById('error').textContent = `Դիկտացիա բեռնելու սխալ: ${err.message}`;
-      }
-    }
-
-function processData() {
+    function processData() {
       departments = {};
       rawDataTyping.forEach(item => {
         const dept = extractDepartment(item.hostname);
-        
-        // Skip excluded departments
         if (!dept) return;
-        
+
         if (!departments[dept]) {
           departments[dept] = { users: [], total: 0, count: 0, activeCount: 0, isDictation: isDictationDepartment(dept) };
           sortStates[dept] = { type: 'avg', dir: 'desc' };
         }
-        
-        item.originalChars = item.chars;
-        const userKey = getUserKey(item.original);
-        
-        // For MRT and CT departments, use dictation data
-        if (departments[dept].isDictation && DICTATION_USERS[userKey] !== undefined) {
-          item.dictationChars = DICTATION_USERS[userKey];
-          item.chars = item.dictationChars;
+
+        const key = item.hostname.toLowerCase();
+        const dictUser = DICTATION_MAP[key];
+
+        if (dictUser) {
+          item.dictationChars = dictUser.chars;
+          item.chars = dictUser.chars;
           item.isDictationUser = true;
+          item.original = dictUser.fullName;
         } else {
           item.isDictationUser = false;
         }
-        
+
         departments[dept].users.push(item);
         if (item.chars >= 2000) {
           item.isActive = true;
@@ -969,13 +830,11 @@ function processData() {
       Object.keys(departments).forEach(dept => {
         const d = departments[dept];
         if (d.isDictation) {
-          // For dictation departments, show time saved (current time with dictation)
           d.currentTimeWithDictation = d.total / CHARS_PER_HOUR_TYPED;
           d.wouldBeWastedTime = d.currentTimeWithDictation * DICTATION_SPEEDUP;
           d.timeSaved = d.wouldBeWastedTime - d.currentTimeWithDictation;
           d.avgCurrentTimePerDoc = d.activeCount > 0 ? d.currentTimeWithDictation / d.activeCount : 0;
         } else {
-          // For typing departments, show wasted time
           d.totalWastedHrs = d.total / CHARS_PER_HOUR_TYPED;
           d.avgWastedHrsPerDoc = d.activeCount > 0 ? d.totalWastedHrs / d.activeCount : 0;
           d.avgCharsPerDoc = d.activeCount > 0 ? d.total / d.activeCount : 0;
@@ -985,47 +844,26 @@ function processData() {
     }
 
     function getFilteredDepartments() {
-      const filtered = Object.entries(departments)
-        .filter(([deptName, data]) => {
-          // For dictation departments, always show them (no filtering by hours)
-          if (data.isDictation) {
-            return true;
-          }
-          
-          // For typing departments, apply the filter
-          const deptHrs = Math.round(data.avgWastedHrsPerDoc * 10) / 10;
-          const threshold = Math.round(currentMinHrs * 10) / 10;
-          const meetsThreshold = deptHrs >= threshold;
-          
-          if (currentMinHrs > 0) {
-            console.log(`${deptName}: ${deptHrs.toFixed(1)} hrs/doc (threshold: ${threshold.toFixed(1)}) ${meetsThreshold ? '✓' : '✗'}`);
-          }
-          return meetsThreshold;
-        })
+      return Object.entries(departments)
+        .filter(([deptName, data]) => data.isDictation || data.avgWastedHrsPerDoc >= currentMinHrs)
         .sort((a, b) => {
-          // Sort dictation departments first, then by total hours
           if (a[1].isDictation && !b[1].isDictation) return -1;
           if (!a[1].isDictation && b[1].isDictation) return 1;
-          
           const aHours = a[1].isDictation ? a[1].currentTimeWithDictation : a[1].totalWastedHrs;
           const bHours = b[1].isDictation ? b[1].currentTimeWithDictation : b[1].totalWastedHrs;
           return bHours - aHours;
         });
-      
-      return filtered;
     }
 
     function renderDepartments() {
       const container = document.getElementById('departments');
       container.innerHTML = '';
       const filtered = getFilteredDepartments();
-
       filtered.forEach(([dept, data]) => {
         const deptCard = document.createElement('div');
         deptCard.className = 'dept-card';
-        
+
         if (data.isDictation) {
-          // Dictation departments: Show time saved by using dictation
           deptCard.innerHTML = `
             <div class="dept-header" onclick="toggleUsers('${dept}')">
               <div>
@@ -1034,29 +872,26 @@ function processData() {
                   ~${data.currentTimeWithDictation.toFixed(1)} ժ/օր (դիկտացիայով)
                 </div>
                 <div style="color:var(--trust-blue); font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
-                  Խնայում է ${data.timeSaved.toFixed(1)} ժ/օր տպագրման հետ համեմատ
+                  Խնայում է ${data.timeSaved.toFixed(1)} ժ/օր (3× արագ)
                 </div>
                 <div class="dept-subtext">
                   ${data.activeCount} ակտիվ ռադիոլոգ${data.activeCount !== 1 ? 'ներ' : ''} •
-                  ${data.total.toLocaleString()} նիշ դիկտացվել է/օր
+                  ${data.total.toLocaleString()} նիշ/օր
                 </div>
                 <div class="savings-info visible" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: var(--success);">
                   <div class="savings-header">
                     <span class="savings-icon">⚡</span>
-                    <span class="savings-title" style="color: var(--success);">Ժամանակի արդյունավետություն դիկտացիայով</span>
+                    <span class="savings-title" style="color: var(--success);">Դիկտացիան 3× արագ է</span>
                   </div>
                   <div class="savings-comparison">
                     <div class="comparison-item">
-                      <div class="comparison-label">Ներկայումս (Դիկտացիա)</div>
+                      <div class="comparison-label">Դիկտացիա</div>
                       <div class="comparison-value after">${data.currentTimeWithDictation.toFixed(1)} ժ</div>
                     </div>
                     <div class="comparison-item">
-                      <div class="comparison-label">Կլիներ (Տպագրում)</div>
+                      <div class="comparison-label">Տպագրում</div>
                       <div class="comparison-value before">${data.wouldBeWastedTime.toFixed(1)} ժ</div>
                     </div>
-                  </div>
-                  <div class="savings-subtext" style="color: #065f46; margin-top:0.5rem;">
-                    Դիկտացիան 3 անգամ ավելի արագ է - խնայում է ${((data.timeSaved / data.wouldBeWastedTime) * 100).toFixed(0)}% ժամանակ օրական
                   </div>
                 </div>
               </div>
@@ -1065,20 +900,18 @@ function processData() {
             <div id="users-${dept}" class="users-container"></div>
           `;
         } else {
-          // Typing departments: Show wasted time
           deptCard.innerHTML = `
             <div class="dept-header" onclick="toggleUsers('${dept}')">
               <div>
                 <div class="dept-name">${dept}</div>
-                <div class="dept-metric" style="color:var(--danger); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
+                <div class="dept-metric" style="color:var(--danger);">
                   ~${data.totalWastedHrs.toFixed(1)} կորած ժ/օր
                 </div>
-                <div style="color:#6b7280; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
-                  ${data.avgWastedHrsPerDoc.toFixed(1)} ժ/բժիշկ (միջին)
+                <div style="color:#6b7280; font-size:1.35rem; font-weight:700;">
+                  ${data.avgWastedHrsPerDoc.toFixed(1)} ժ/բժիշկ
                 </div>
                 <div class="dept-subtext">
-                  ${data.activeCount} ակտիվ բժիշկ${data.activeCount !== 1 ? 'ներ' : ''} •
-                  ${data.total.toLocaleString()} նիշ ընդամենը
+                  ${data.activeCount} ակտիվ բժիշկ • ${data.total.toLocaleString()} նիշ
                 </div>
               </div>
               <div class="dept-toggle">▼</div>
@@ -1088,7 +921,6 @@ function processData() {
         }
         container.appendChild(deptCard);
       });
-
       updateFilterStats();
     }
 
@@ -1097,7 +929,6 @@ function processData() {
       const isOpen = container.classList.toggle('open');
       const toggle = container.parentElement.querySelector('.dept-toggle');
       toggle.textContent = isOpen ? '▲' : '▼';
-
       if (isOpen && !container.dataset.rendered) {
         renderUserSection(dept);
         container.dataset.rendered = 'true';
@@ -1106,173 +937,128 @@ function processData() {
 
     function renderUserSection(dept) {
       const container = document.getElementById(`users-${dept}`);
-      const wasOpen = container.classList.contains('open');
-      const scrollY = window.scrollY;
-
       const state = sortStates[dept];
       let users = [...departments[dept].users];
-
-      users.sort((a, b) => {
-        const valA = a.isActive ? a.chars : 0;
-        const valB = b.isActive ? b.chars : 0;
-        return state.dir === 'desc' ? valB - valA : valA - valB;
-      });
+      users.sort((a, b) => state.dir === 'desc' ? b.chars - a.chars : a.chars - b.chars);
 
       container.innerHTML = `
         <div class="sort-controls">
-          <select onchange="updateSort('${dept}', 'type', this.value)">
-            <option value="avg" selected>Միջին նիշեր</option>
-          </select>
           <select onchange="updateSort('${dept}', 'dir', this.value)">
-            <option value="desc" selected>Նվազող</option>
-            <option value="asc">Աճող</option>
+            <option value="desc" ${state.dir === 'desc' ? 'selected' : ''}>Նվազող</option>
+            <option value="asc" ${state.dir === 'asc' ? 'selected' : ''}>Աճող</option>
           </select>
         </div>
         <div class="user-list" id="user-list-${dept}"></div>
-        <div class="chart-container">
-          <canvas id="user-chart-${dept}"></canvas>
-        </div>
+        <div class="chart-container"><canvas id="user-chart-${dept}"></canvas></div>
       `;
 
       const list = document.getElementById(`user-list-${dept}`);
-      const isDictDept = departments[dept].isDictation;
-      
       users.forEach(user => {
         const item = document.createElement('div');
         item.className = 'user-item';
-        item.style.transition = 'all 0.3s ease';
-        item.onclick = (e) => {
-          e.stopPropagation();
-          toggleUserActive(dept, user);
-        };
+        item.style.opacity = user.isActive ? '1' : '0.35';
+        item.style.filter = user.isActive ? 'none' : 'blur(1.2px)';
+        item.title = user.isActive ? 'Բացառել' : 'Ընդգրկել';
+        item.onclick = (e) => { e.stopPropagation(); toggleUserActive(dept, user); };
 
-        if (!user.isActive) {
-          item.style.opacity = '0.35';
-          item.style.filter = 'blur(1.2px)';
-          item.title = 'Սեղմեք ընդգրկելու համար';
-        } else {
-          item.style.opacity = '1';
-          item.style.filter = 'none';
-          item.title = 'Սեղմեք բացառելու համար';
-        }
-
-        if (isDictDept) {
-          // Dictation department users
-          const currentTime = user.chars / CHARS_PER_HOUR_TYPED;
-          const wouldBeTime = currentTime * DICTATION_SPEEDUP;
-          const saved = wouldBeTime - currentTime;
-          
+        if (user.isDictationUser) {
+          const curr = user.chars / CHARS_PER_HOUR_TYPED;
+          const would = curr * 3;
+          const saved = would - curr;
           item.innerHTML = `
             <div class="user-name">${user.original} 🎤</div>
             <div class="user-metric">
               ${user.chars.toLocaleString()} նիշ/օր •
-              <span style="color:var(--success)">${currentTime.toFixed(1)} ժ</span>
-              <span style="color:var(--trust-blue); margin-left:0.5rem;">խնայում է ${saved.toFixed(1)} ժ տպագրման հետ համեմատ</span>
-              ${!user.isActive ? ' <em style="color:#9ca3af">(սեղմեք ընդգրկելու համար)</em>' : ''}
+              <span style="color:var(--success)">${curr.toFixed(1)} ժ</span>
+              <span style="color:var(--trust-blue); margin-left:0.5rem;">խնայում է ${saved.toFixed(1)} ժ</span>
             </div>
           `;
         } else {
-          // Typing department users
-          const wastedHrs = user.chars / CHARS_PER_HOUR_TYPED;
-          
+          const hrs = user.chars / CHARS_PER_HOUR_TYPED;
           item.innerHTML = `
             <div class="user-name">${user.original}</div>
             <div class="user-metric">
               ${user.chars.toLocaleString()} նիշ •
-              <span style="color:var(--danger)">${wastedHrs.toFixed(1)} ժ</span>
-              ${!user.isActive ? ' <em style="color:#9ca3af">(սեղմեք ընդգրկելու համար)</em>' : ''}
+              <span style="color:var(--danger)">${hrs.toFixed(1)} ժ</span>
             </div>
           `;
         }
-        
         list.appendChild(item);
       });
 
-      if (wasOpen) {
-        container.classList.add('open');
-        container.parentElement.querySelector('.dept-toggle').textContent = '▲';
-      }
-
       renderUserChart(dept, users.filter(u => u.isActive));
-      window.scrollTo(0, scrollY);
     }
 
-    function renderUserChart(dept, allUsers) {
-      const activeUsers = allUsers.filter(u => u.isActive);
-      const canvasId = `user-chart-${dept}`;
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      const labels = activeUsers.map(u => u.original.split(' ')[0]);
-      const isDictDept = departments[dept].isDictation;
+    function renderUserChart(dept, activeUsers) {
+      const ctx = document.getElementById(`user-chart-${dept}`).getContext('2d');
+      const labels = activeUsers.map(u => u.original);
+      const isDict = departments[dept].isDictation;
 
-      if (userCharts[dept] && typeof userCharts[dept].destroy === 'function') {
-        userCharts[dept].destroy();
-      }
+      if (userCharts[dept]) userCharts[dept].destroy();
 
-      let datasets;
-      
-      if (isDictDept) {
-        // For dictation departments: show current time and what it would be if typing
-        const currentData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
-        const wouldBeData = activeUsers.map(u => (u.chars / CHARS_PER_HOUR_TYPED) * DICTATION_SPEEDUP);
-        
-        datasets = [
-          {
-            label: 'Ներկայիս ժամանակ (դիկտացիայով)',
-            data: currentData,
-            backgroundColor: 'rgba(16, 185, 129, 0.9)',
-            borderColor: 'rgba(16, 185, 129, 1)',
-            borderWidth: 1,
-          },
-          {
-            label: 'Կլիներ (եթե տպագրեին)',
-            data: wouldBeData,
-            backgroundColor: 'rgba(239, 68, 68, 0.5)',
-            borderColor: 'rgba(239, 68, 68, 1)',
-            borderWidth: 1,
-          }
-        ];
-      } else {
-        // For typing departments: show wasted time
-        const wastedData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
-        
-        datasets = [{
-          label: 'Ներկայիս կորած ժամանակ',
-          data: wastedData,
-          backgroundColor: 'rgba(239, 68, 68, 0.9)',
-          borderColor: 'rgba(239, 68, 68, 1)',
-          borderWidth: 1,
-        }];
-      }
+      const datasets = isDict ? [
+        { label: 'Դիկտացիա', data: activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED), backgroundColor: 'rgba(16,185,129,0.9)' },
+        { label: 'Եթե տպագրեին', data: activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED * 3), backgroundColor: 'rgba(239,68,68,0.5)' }
+      ] : [
+        { label: 'Կորած ժամանակ', data: activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED), backgroundColor: 'rgba(239,68,68,0.9)' }
+      ];
 
       userCharts[dept] = new Chart(ctx, {
         type: 'bar',
+        data: { labels, datasets },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          plugins: { legend: { position: 'top' } },
+          scales: { x: { title: { display: true, text: 'Ժամեր օրական' } } }
+        }
+      });
+    }
+
+    function renderDictationData() {
+      const list = document.getElementById('dictationList');
+      const sorted = [...DICTATION_USERS].sort((a, b) => b.chars - a.chars);
+      list.innerHTML = '';
+      sorted.forEach(u => {
+        const div = document.createElement('div');
+        div.className = 'dictation-item';
+        div.innerHTML = `
+          <div class="user-name">${u.fullName} 🎤</div>
+          <div class="dictation-metric">${u.chars.toLocaleString()} նիշ/օր</div>
+        `;
+        list.appendChild(div);
+      });
+      renderDictationChart(sorted.slice(0, 10));
+    }
+
+    function renderDictationChart(top10) {
+      const ctx = document.getElementById('dictationChart').getContext('2d');
+      const labels = top10.map(u => u.fullName);
+      const data = top10.map(u => u.chars);
+      if (window.dictationChart) window.dictationChart.destroy();
+      window.dictationChart = new Chart(ctx, {
+        type: 'bar',
         data: {
           labels,
-          datasets
+          datasets: [{
+            label: 'Դիկտացված նիշեր/օր',
+            data,
+            backgroundColor: 'rgba(239,68,68,0.8)'
+          }]
         },
         options: {
           indexAxis: 'y',
           responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} ժ/օր` } }
-          },
-          scales: {
-            x: { beginAtZero: true, title: { display: true, text: 'Ժամեր օրական' } },
-            y: { grid: { display: false } }
-          }
+          plugins: { legend: { position: 'top' } },
+          scales: { x: { title: { display: true, text: 'Նիշեր օրական' } } }
         }
       });
     }
 
     function applyFilter() {
-      const input = document.getElementById('minHrsFilter');
-      const value = input.value.trim();
-      const newMinHrs = (value === '' || isNaN(value)) ? 0 : parseFloat(value);
-      
-      if (newMinHrs !== currentMinHrs) {
-        currentMinHrs = newMinHrs;
-        console.log('Filter applied:', currentMinHrs);
+      const val = parseFloat(document.getElementById('minHrsFilter').value) || 0;
+      if (val !== currentMinHrs) {
+        currentMinHrs = val;
         renderDepartments();
         renderDeptChart();
       }
@@ -1281,190 +1067,59 @@ function processData() {
     function renderDeptChart() {
       const ctx = document.getElementById('deptChart').getContext('2d');
       const filtered = getFilteredDepartments();
-
       const labels = filtered.map(([d]) => d);
-      const datasets = [];
+      const dictData = filtered.map(([_, d]) => d.isDictation ? d.currentTimeWithDictation : 0);
+      const wouldBeData = filtered.map(([_, d]) => d.isDictation ? d.wouldBeWastedTime : 0);
+      const typingData = filtered.map(([_, d]) => d.isDictation ? 0 : d.totalWastedHrs);
 
-      // Separate dictation and typing departments
-      const dictDepts = filtered.filter(([_, d]) => d.isDictation);
-      const typingDepts = filtered.filter(([_, d]) => !d.isDictation);
-
-      if (typingDepts.length > 0) {
-        const wastedData = filtered.map(([_, d]) => d.isDictation ? 0 : d.totalWastedHrs);
-        datasets.push({ 
-          label: 'Ներկայիս կորած ժամանակ (Տպագրում)', 
-          data: wastedData, 
-          backgroundColor: 'rgba(239,68,68,0.9)', 
-          borderColor: 'rgba(239,68,68,1)', 
-          borderWidth: 1 
-        });
-      }
-
-      if (dictDepts.length > 0) {
-        const currentData = filtered.map(([_, d]) => d.isDictation ? d.currentTimeWithDictation : 0);
-        const wouldBeData = filtered.map(([_, d]) => d.isDictation ? d.wouldBeWastedTime : 0);
-        
-        datasets.push({
-          label: 'Ներկայիս ժամանակ (դիկտացիայով)',
-          data: currentData,
-          backgroundColor: 'rgba(16, 185, 129, 0.9)',
-          borderColor: 'rgba(16, 185, 129, 1)',
-          borderWidth: 1
-        });
-        
-        datasets.push({
-          label: 'Կլիներ (եթե տպագրեին)',
-          data: wouldBeData,
-          backgroundColor: 'rgba(239, 68, 68, 0.5)',
-          borderColor: 'rgba(239, 68, 68, 1)',
-          borderWidth: 1
-        });
-      }
-
-      if (window.deptChart && typeof window.deptChart.destroy === 'function') {
-        window.deptChart.destroy();
-      }
-
+      if (window.deptChart) window.deptChart.destroy();
       window.deptChart = new Chart(ctx, {
-        type: 'bar',
-        data: { 
-          labels, 
-          datasets 
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          plugins: { legend: { position: 'top' } },
-          scales: {
-            x: { beginAtZero: true, title: { display: true, text: 'Ժամեր օրական' } },
-            y: { grid: { display: false } }
-          }
-        }
-      });
-    }
-
-    window.toggleDictation = function () {
-      const btn = document.getElementById('dictationToggle');
-      const deptsDiv = document.getElementById('departments');
-      const chartContainer = document.getElementById('chartContainer');
-      const dictationSection = document.getElementById('dictationSection');
-      const subtitle = document.getElementById('subtitle');
-      const filterPanel = document.getElementById('filterPanel');
-
-      if (isDictationVisible) {
-        dictationSection.classList.add('hidden');
-        deptsDiv.classList.remove('hidden');
-        chartContainer.style.display = 'block';
-        filterPanel.style.display = 'block';
-        subtitle.textContent = 'Ամբողջ ժամանակը ԺԱՄԵՐՈՎ • Կարմիր = Կորած ժամանակ (Տպագրում) • Կանաչ = Խնայված ժամանակ (Դիկտացիա)';
-        btn.textContent = 'Ցուցադրել դիկտացիայի տվյալները';
-        btn.classList.remove('dictation-btn');
-        isDictationVisible = false;
-      } else {
-        if (rawDataDictation.length === 0) {
-          loadDictationData();
-        } else {
-          renderDictationData();
-        }
-        deptsDiv.classList.add('hidden');
-        chartContainer.style.display = 'none';
-        filterPanel.style.display = 'none';
-        dictationSection.classList.remove('hidden');
-        btn.textContent = 'Թաքցնել դիկտացիայի տվյալները';
-        btn.classList.add('dictation-btn');
-        subtitle.textContent = 'Դիկտացիայի տվյալներ • Կարմիր = Խնայված ժամանակ դիկտացիայի միջոցով';
-        isDictationVisible = true;
-      }
-    };
-
-    function renderDictationData() {
-      const list = document.getElementById('dictationList');
-      const sortedData = [...rawDataDictation].sort((a, b) => b.chars - a.chars);
-      list.innerHTML = '';
-      sortedData.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dictation-item';
-        div.innerHTML = `
-          <div class="user-name">${item.original}</div>
-          <div class="dictation-metric">${item.chars.toLocaleString()} chars/day</div>
-        `;
-        list.appendChild(div);
-      });
-      renderDictationChart(sortedData);
-    }
-
-    function renderDictationChart(data) {
-      const topData = data.slice(0, 10);
-      const ctx = document.getElementById('dictationChart').getContext('2d');
-      const labels = topData.map(u => u.original.split(' ')[0]);
-      const charsData = topData.map(u => u.chars);
-      if (window.dictationChart && typeof window.dictationChart.destroy === 'function') {
-        window.dictationChart.destroy();
-      }
-      window.dictationChart = new Chart(ctx, {
         type: 'bar',
         data: {
           labels,
           datasets: [
-            {
-              label: 'Օրական նիշեր (Դիկտացված)',
-              data: charsData,
-              backgroundColor: 'rgba(239, 68, 68, 0.8)',
-              borderColor: 'rgba(239, 68, 68, 1)',
-              borderWidth: 1,
-            }
+            { label: 'Դիկտացիա', data: dictData, backgroundColor: 'rgba(16,185,129,0.9)' },
+            { label: 'Կլիներ (տպագրում)', data: wouldBeData, backgroundColor: 'rgba(239,68,68,0.5)' },
+            { label: 'Կորած ժամանակ', data: typingData, backgroundColor: 'rgba(239,68,68,0.9)' }
           ]
         },
         options: {
           indexAxis: 'y',
           responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} նիշ/օր` } }
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              title: { display: true, text: 'Նիշեր օրական' }
-            },
-            y: {
-              grid: { display: false }
-            }
-          }
+          plugins: { legend: { position: 'top' } },
+          scales: { x: { title: { display: true, text: 'Ժամեր օրական' } } }
         }
       });
     }
 
+    window.toggleDictation = function () {
+      const section = document.getElementById('dictationSection');
+      const btn = document.getElementById('dictationToggle');
+      if (isDictationVisible) {
+        section.classList.add('hidden');
+        document.getElementById('departments').classList.remove('hidden');
+        document.getElementById('chartContainer').style.display = 'block';
+        document.getElementById('filterPanel').style.display = 'block';
+        btn.textContent = 'Ցուցադրել դիկտացիայի տվյալները';
+        btn.classList.remove('dictation-btn');
+        isDictationVisible = false;
+      } else {
+        renderDictationData();
+        section.classList.remove('hidden');
+        document.getElementById('departments').classList.add('hidden');
+        document.getElementById('chartContainer').style.display = 'none';
+        document.getElementById('filterPanel').style.display = 'none';
+        btn.textContent = 'Թաքցնել';
+        btn.classList.add('dictation-btn');
+        isDictationVisible = true;
+      }
+    };
+
     function updateFilterStats() {
       const filtered = getFilteredDepartments();
-      let filteredDoctors = 0;
-
-      filtered.forEach(([_, dept]) => {
-        filteredDoctors += dept.users.length;
-      });
-
-      const visibleDepts = filtered.length;
-
-      document.getElementById('totalUsers').textContent = filteredDoctors;
-      document.getElementById('activeDepts').textContent = visibleDepts;
-      document.getElementById('deptPlural').textContent = '';
-    }
-
-    function updateSavingsBanner() {
-      const filtered = getFilteredDepartments();
-      let totalTimeAfter = 0;
-      let totalWasted = 0;
-
-      filtered.forEach(([_, dept]) => {
-        totalTimeAfter += dept.timeWithDictation;
-        totalWasted += dept.totalWastedHrs;
-      });
-
-      const savingsPercent = totalWasted > 0 ? ((1 - totalTimeAfter / totalWasted) * 100).toFixed(0) : 0;
-
-      document.getElementById('totalTimeAfter').textContent = totalTimeAfter.toFixed(1);
-      document.getElementById('totalTimeBefore').textContent = totalWasted.toFixed(1);
-      document.getElementById('savingsPercent').textContent = savingsPercent + '%';
+      const doctors = filtered.reduce((sum, [_, d]) => sum + d.users.length, 0);
+      document.getElementById('totalUsers').textContent = doctors;
+      document.getElementById('activeDepts').textContent = filtered.length;
     }
 
     window.updateSort = function(dept, field, value) {
@@ -1474,74 +1129,44 @@ function processData() {
 
     window.toggleUserActive = function(dept, user) {
       user.isActive = !user.isActive;
-      
-      const deptData = departments[dept];
-      deptData.total = 0;
-      deptData.activeCount = 0;
-      
-      deptData.users.forEach(u => {
-        if (u.isActive) {
-          deptData.total += u.chars;
-          deptData.activeCount += 1;
-        }
-      });
-      
-      if (deptData.isDictation) {
-        deptData.currentTimeWithDictation = deptData.total / CHARS_PER_HOUR_TYPED;
-        deptData.wouldBeWastedTime = deptData.currentTimeWithDictation * DICTATION_SPEEDUP;
-        deptData.timeSaved = deptData.wouldBeWastedTime - deptData.currentTimeWithDictation;
-        deptData.avgCurrentTimePerDoc = deptData.activeCount > 0 ? deptData.currentTimeWithDictation / deptData.activeCount : 0;
+      const d = departments[dept];
+      d.total = 0; d.activeCount = 0;
+      d.users.forEach(u => { if (u.isActive) { d.total += u.chars; d.activeCount++; } });
+      if (d.isDictation) {
+        d.currentTimeWithDictation = d.total / CHARS_PER_HOUR_TYPED;
+        d.wouldBeWastedTime = d.currentTimeWithDictation * 3;
+        d.timeSaved = d.wouldBeWastedTime - d.currentTimeWithDictation;
       } else {
-        deptData.totalWastedHrs = deptData.total / CHARS_PER_HOUR_TYPED;
-        deptData.avgWastedHrsPerDoc = deptData.activeCount > 0 ? deptData.totalWastedHrs / deptData.activeCount : 0;
-        deptData.timeWithDictation = deptData.totalWastedHrs / DICTATION_SPEEDUP;
+        d.totalWastedHrs = d.total / CHARS_PER_HOUR_TYPED;
       }
-      
       renderUserSection(dept);
       renderDepartments();
       renderDeptChart();
     };
 
     function updateLastRefreshTime() {
-      const timestamp = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
-      if (timestamp) {
-        const date = new Date(timestamp);
-        const timeStr = date.toLocaleString('hy-AM');
+      const ts = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
+      if (ts) {
+        const date = new Date(ts).toLocaleString('hy-AM');
         document.querySelector('.footer').innerHTML = `
           Միայն ձեռքով թարմացում • 1 ժամ խնայվում է 60,000 նիշի համար • Տպագրում՝ 20 բառ/րոպե<br>
-          <span style="color: #10b981; font-weight: 600;">Վերջին թարմացում՝ ${timeStr}</span>
+          <span style="color: #10b981; font-weight: 600;">Վերջին թարմացում՝ ${date}</span>
         `;
       }
     }
 
     function loadCachedData() {
-      const cachedTyping = localStorage.getItem(STORAGE_KEY_TYPING);
-      const cachedDictation = localStorage.getItem(STORAGE_KEY_DICTATION);
-      
-      if (cachedTyping) {
-        try {
-          rawDataTyping = JSON.parse(cachedTyping);
-          processData();
-          document.getElementById('filterPanel').style.display = 'block';
-          document.getElementById('minHrsFilter').value = '0';
-          currentMinHrs = 0;
-          renderDepartments();
-          renderDeptChart();
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('chartContainer').style.display = 'block';
-          document.getElementById('dictationToggle').style.display = 'inline-block';
-          updateLastRefreshTime();
-        } catch (err) {
-          console.error('Error loading cached data:', err);
-        }
-      }
-      
-      if (cachedDictation) {
-        try {
-          rawDataDictation = JSON.parse(cachedDictation);
-        } catch (err) {
-          console.error('Error loading cached dictation:', err);
-        }
+      const cached = localStorage.getItem(STORAGE_KEY_TYPING);
+      if (cached) {
+        rawDataTyping = JSON.parse(cached);
+        processData();
+        renderDepartments();
+        renderDeptChart();
+        renderDictationData();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('chartContainer').style.display = 'block';
+        document.getElementById('dictationToggle').style.display = 'inline-block';
+        updateLastRefreshTime();
       }
     }
 
@@ -1550,18 +1175,11 @@ function processData() {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainContent').classList.add('visible');
       }
-      
-      document.getElementById('passwordInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          handleLogin();
-        }
-      });
-      
+      document.getElementById('passwordInput').addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
       loadCachedData();
     });
 
     document.getElementById('minHrsFilter').addEventListener('input', applyFilter);
   </script>
 </body>
-
 </html>
