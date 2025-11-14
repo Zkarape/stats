@@ -108,11 +108,14 @@
       font-size: 1.2rem;
       color: #64748b;
       padding: 0.5rem;
-      transition: color 0.2s;
+      box-shadow: none;
     }
 
     .password-toggle:hover {
-      color: var(--primary);
+      background: none;
+      color: #64748b;
+      transform: translateY(-50%);
+      box-shadow: none;
     }
 
     .login-input:focus {
@@ -124,6 +127,11 @@
     .login-input.error {
       border-color: var(--danger);
       animation: shake 0.4s;
+    }
+
+    .avg-per-doc {
+      font-weight: 800;
+      color: var(--text);
     }
 
     @keyframes shake {
@@ -145,7 +153,7 @@
     .login-btn {
       width: 100%;
       padding: 0.9rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #223671;
       color: white;
       border: none;
       border-radius: 10px;
@@ -363,7 +371,7 @@
 
     .savings-title {
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1.5rem;
       color: var(--trust-blue);
     }
 
@@ -655,7 +663,7 @@
         <input type="password" id="passwordInput" class="login-input" placeholder="Մուտքագրեք գաղտնաբառը"
           autocomplete="off">
         <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
-          👁
+          👁️
         </button>
       </div>
       <button class="login-btn" onclick="handleLogin()">Մուտք գործել</button>
@@ -665,23 +673,24 @@
   <div id="mainContent" class="main-content">
     <div class="container">
       <header>
-        <h1>Productivity Dashboard</h1>
-        <p class="subtitle" id="subtitle">All time in HOURS • Red = Wasted Time at 20 WPM</p>
+        <h1>Տպելու/Թելադրելու Ստատիստիկա</h1>
+        <p class="subtitle" id="subtitle">Տվյալները հավաքված են Էրեբունի ԲԿ-ի 530-ից ավել համակարգիչների վրա տեղադրված
+          ծրագրի շնորհիվ, որը հաշվում է ստեղնաշարին սեղմած ստեղների քանակը և բժշկի տպելու արագությունը։</p>
       </header>
       <div class="controls">
-        <button onclick="loadData()">Refresh Data</button>
+        <button onclick="loadData()">Թարմացնել տվյալները</button>
       </div>
 
       <div id="savingsBanner" class="savings-banner" style="display:none;">
         <div class="savings-banner-content">
           <div class="savings-stat">
             <span class="savings-stat-value" id="totalTimeAfter">0</span>
-            <span class="savings-stat-label">Ժամեր դիկտացիայով</span>
-            <div class="savings-stat-sublabel">(3 անգամ ավելի արագ քան տպագրումը)</div>
+            <span class="savings-stat-label">Ժամեր թելադրմամբ/span>
+              <div class="savings-stat-sublabel">(3 անգամ ավելի արագ քան տպագրումը)</div>
           </div>
           <div class="savings-stat">
             <span class="savings-stat-value" id="totalTimeBefore">0</span>
-            <span class="savings-stat-label">Ներկայումս կորած ժամեր</span>
+            <span class="savings-stat-label">Ներկայումս ծախսված ժամեր</span>
             <div class="savings-stat-sublabel">(տպագրում 20 բառ/րոպե արագությամբ)</div>
           </div>
           <div class="savings-stat">
@@ -692,23 +701,33 @@
       </div>
 
       <div id="filterPanel" class="calculator-panel" style="display:none; margin-top:1.5rem;">
-        <div class="calculator-title">Զտել բաժինները ըստ միջին ժամ/բժիշկ</div>
+        <div class="calculator-title">Ֆիլտրել բաժանմունքները</div>
         <div class="calculator-row" style="align-items:center; gap:1.5rem; flex-wrap:wrap;">
           <div style="flex:1; min-width:200px;">
             <label style="font-weight:600; display:block; margin-bottom:0.5rem;">
-              Ցուցադրել բաժինները, որտեղ մեկ բժշկի միջին կորած ժամանակը ≥
+              Ցուցադրել բաժանմունքները, որոնք օրական տպելու վրա ծախսում են ամենաքիչը՝
             </label>
-            <input type="number" step="0.1" min="0" value="0" placeholder="0" id="minHrsFilter"
+            <input type="number" step="1" min="0" value="100" placeholder="100" id="minHrsFilter"
               style="width:100%; max-width:120px; font-size:1.1rem; padding:0.6rem;">
+            <span style="font-size:0.9rem; color:#64748b; margin-left:0.5rem;">րոպե</span>
           </div>
           <div style="display:flex; gap:2rem; font-size:1.1rem; font-weight:600; color:var(--text);">
             <div>
-              <strong id="totalUsers">0</strong> բժիշկ զտված բաժիններում
+              <strong id="totalUsers">0</strong> բժիշկ*
             </div>
             <div>
               <strong id="activeDepts">0</strong> բաժին<span id="deptPlural"></span>
             </div>
           </div>
+        </div>
+
+        <!-- NEW: Exact text you asked for -->
+        <div class="calculator-row" style="margin-top:1rem; padding-top:0.75rem; border-top:1px solid var(--border);">
+          <div id="savingsFormulaText" style="font-size:0.9rem; color:#64748b; font-style:italic; line-height:1.4;">
+            Արդյունքում հիվանդանոցը օրական կխնայի <strong id="savedHours">0.0</strong> ժամ, քանի որ թելադրելը 3 անգամ արագ է։
+          </div>
+          <div style="font-size:0.7rem; color:#64748b; margin-top:0.5rem;">
+            * Բժիշկների ընդհանուր թիվը ներառում է միայն այն բժիշկներին, ովքեր տպում են ամենաքիչը 25 րոպե օրական։
         </div>
       </div>
 
@@ -719,7 +738,7 @@
       </div>
       <div id="departments"></div>
       <div id="dictationSection" class="dictation-container hidden">
-        <h2 class="dictation-title">Դիկտացիայի տվյալներ (Նիշեր/օր)</h2>
+        <h2 class="dictation-title">Թելադրման տվյալներ (Նիշեր/օր)</h2>
         <div id="dictationList"></div>
         <div class="chart-container dictation-chart">
           <canvas id="dictationChart"></canvas>
@@ -732,25 +751,25 @@
   </div>
 
   <script>
-    const CORRECT_PASSWORD = "erebuni2024";
+    const CORRECT_PASSWORD = "erebuni2025";
     const AUTH_KEY = 'productivity_auth';
 
     // Dictation users data (chars/day) - these are the ONLY users for MRT and CT departments
     const DICTATION_USERS = [
-      { name: 'Hamaspyur', dept: 'CT', chars: 19121.24 },
-      { name: 'Karine', dept: 'CT', chars: 18088.50 },
-      { name: 'Lusine', dept: 'CT', chars: 11931.9 },
-      { name: 'Eva', dept: 'MRT', chars: 11263.67 },
-      { name: 'Zhanna', dept: 'MRT', chars: 12370.8 },
-      { name: 'Hayk', dept: 'CT', chars: 4754.47 },
-      { name: 'Gayane', dept: 'CT', chars: 9581.0 },
-      { name: 'Vigen', dept: 'CT', chars: 6928.0 },
-      { name: 'Sveta', dept: 'MRT', chars: 3362.0 },
-      { name: 'Rima', dept: 'MRT', chars: 3428.0 },
-      { name: 'Eduard', dept: 'MRT', chars: 2138.5 },
-      { name: 'Margarita', dept: 'CT', chars: 1906.00 },
-      { name: 'Mikhayil', dept: 'MRT', chars: 1250.0 },
-      { name: 'Susanna', dept: 'CT', chars: 0.00 }
+      { name: 'CTdoc1', dept: 'CT', chars: 19121.24 },
+      { name: 'CTdoc2', dept: 'CT', chars: 18088.50 },
+      { name: 'CTdoc3', dept: 'CT', chars: 11931.9 },
+      { name: 'MRIdoc1', dept: 'MRT', chars: 11263.67 },
+      { name: 'MRIdoc2', dept: 'MRT', chars: 12370.8 },
+      { name: 'CTdoc3', dept: 'CT', chars: 4754.47 },
+      { name: 'CTdoc4', dept: 'CT', chars: 9581.0 },
+      { name: 'CTdoc5', dept: 'CT', chars: 6928.0 },
+      { name: 'MRIdoc3', dept: 'MRT', chars: 3362.0 },
+      { name: 'MRIdoc4', dept: 'MRT', chars: 3428.0 },
+      { name: 'MRIdoc5', dept: 'MRT', chars: 2138.5 },
+      { name: 'CTdoc6', dept: 'CT', chars: 1906.00 },
+      { name: 'MRIdoc6', dept: 'MRT', chars: 1250.0 },
+      { name: 'CTdoc7', dept: 'CT', chars: 0.00 }
     ];
 
     const DATA_URL = "https://dq7nxls5c5g6rsf7oyrsseivda0qfhnv.lambda-url.us-east-1.on.aws/";
@@ -759,7 +778,10 @@
     const TYPING_SPEED_WPM = 16;
     const CHARS_PER_WORD = 5;
     const CHARS_PER_HOUR_TYPED = TYPING_SPEED_WPM * CHARS_PER_WORD * 60;
-    const DICTATION_SPEEDUP = 3;
+    const DICTATION_SPEEDUP = 3; // Dictation is 2.2x faster than typing
+    const DICTATION_SPEEDUP_RAD = 2.2; // Dictation is 2.2x faster than typing
+    const DICTATION_SPEEDUP_CT = 2.2;   // CT is 2.2x faster
+    const DICTATION_SPEEDUP_MRT = 2.4;  // MRT is 1.8x faster
     const STORAGE_KEY_TYPING = 'productivity_typing_data';
     const STORAGE_KEY_DICTATION = 'productivity_dictation_data';
     const STORAGE_KEY_TIMESTAMP = 'productivity_data_timestamp';
@@ -770,7 +792,7 @@
     let userCharts = {};
     let sortStates = {};
     let isDictationVisible = false;
-    let currentMinHrs = 0;
+    let currentMinHrs = 1;
 
     function handleLogin() {
       const input = document.getElementById('passwordInput');
@@ -797,14 +819,14 @@
 
     function togglePasswordVisibility() {
       const input = document.getElementById('passwordInput');
-      const btn = event.target;
+      const btn = document.querySelector('.password-toggle');
 
       if (input.type === 'password') {
         input.type = 'text';
-        btn.textContent = '👁';
+        btn.textContent = '👁️'; // closed eye when password is visible
       } else {
         input.type = 'password';
-        btn.textContent = '👁';
+        btn.textContent = '👁️'; // open eye when password is hidden
       }
     }
 
@@ -814,7 +836,7 @@
       // Excluded departments - return null to filter them out
       const excluded = ['zhenya', 'pahest', 'oper', 'buleten', 'aphoteka', 'archiv', 'arxiv',
         'premium', 'comfort', 'inform', 'opersroom', 'lawyer', 'confortp',
-        'statistic', 'radiology', 'tntes', 'manage', 'luso', 'windows'];
+        'statistic', 'radiology', 'tntes', 'manage', 'luso', 'windows', 'appa', 'buxg'];
 
       for (const exc of excluded) {
         if (lower.includes(exc)) return null;
@@ -888,26 +910,26 @@
 
         processData();
         document.getElementById('filterPanel').style.display = 'block';
-        document.getElementById('minHrsFilter').value = '0';
-        currentMinHrs = 0;
+        document.getElementById('minHrsFilter').value = '100';
+        currentMinHrs = 1.6; // 60 minutes = 1 hour
         renderDepartments();
         renderDeptChart();
         loading.style.display = 'none';
         chartContainer.style.display = 'block';
-        document.getElementById('subtitle').textContent = 'Ամբողջ ժամանակը ԺԱՄԵՐՈՎ • Կարմիր = Կորած ժամանակ (Տպագրում) • Կանաչ = Խնայված ժամանակ (Դիկտացիա)';
+        document.getElementById('subtitle').textContent = 'Ամբողջ ժամանակը ԺԱՄԵՐՈՎ • Կարմիր = Ծախսված ժամանակ (Տպագրում) • Կանաչ = Խնայված ժամանակ (Թելադրում)';
         document.getElementById('dictationToggle').style.display = 'inline-block';
         updateLastRefreshTime();
       } catch (err) {
-        loading.style.display = 'none';
-        error.style.display = 'block';
-        error.textContent = `Սխալ: ${err.message}`;
+        // loading.style.display = 'none';
+        // error.style.display = 'block';
+        // error.textContent = `Սխալ: ${err.message}`;
       }
     }
 
     async function loadDictationData() {
       const loading = document.getElementById('loading');
       loading.style.display = 'block';
-      loading.textContent = 'Բեռնվում են դիկտացիայի տվյալները...';
+      loading.textContent = 'Բեռնվում են թելադրման տվյալները...';
       try {
         const res = await fetch(DICTATION_URL + '?t=' + Date.now());
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -932,7 +954,7 @@
       } catch (err) {
         loading.style.display = 'none';
         document.getElementById('error').style.display = 'block';
-        document.getElementById('error').textContent = `Դիկտացիա բեռնելու սխալ: ${err.message}`;
+        document.getElementById('error').textContent = `Թելադրումը բեռնելու սխալ: ${err.message}`;
       }
     }
 
@@ -1007,11 +1029,20 @@
       Object.keys(departments).forEach(dept => {
         const d = departments[dept];
         if (d.isDictation) {
-          // For dictation departments, show time saved (current time with dictation)
+          let speedup;
+          if (dept === 'CT') {
+            speedup = DICTATION_SPEEDUP_CT;
+          } else if (dept === 'MRT') {
+            speedup = DICTATION_SPEEDUP_MRT;
+          } else {
+            speedup = DICTATION_SPEEDUP; // fallback
+          }
+
           d.currentTimeWithDictation = d.total / CHARS_PER_HOUR_TYPED;
-          d.wouldBeWastedTime = d.currentTimeWithDictation * DICTATION_SPEEDUP;
+          d.wouldBeWastedTime = d.currentTimeWithDictation * speedup;
           d.timeSaved = d.wouldBeWastedTime - d.currentTimeWithDictation;
           d.avgCurrentTimePerDoc = d.activeCount > 0 ? d.currentTimeWithDictation / d.activeCount : 0;
+          d.speedup = speedup; // Save for UI
         } else {
           // For typing departments, show wasted time
           d.totalWastedHrs = d.total / CHARS_PER_HOUR_TYPED;
@@ -1026,32 +1057,40 @@
     function getFilteredDepartments() {
       const filtered = Object.entries(departments)
         .filter(([deptName, data]) => {
-          // For dictation departments, always show them (no filtering by hours)
-          if (data.isDictation) {
-            return true;
-          }
+          // Always show dictation departments (CT, MRT)
+          if (data.isDictation) return true;
 
-          // For typing departments, apply the filter
-          const deptHrs = Math.round(data.avgWastedHrsPerDoc * 10) / 10;
-          const threshold = Math.round(currentMinHrs * 10) / 10;
-          const meetsThreshold = deptHrs >= threshold;
-
-          if (currentMinHrs > 0) {
-            console.log(`${deptName}: ${deptHrs.toFixed(1)} hrs/doc (threshold: ${threshold.toFixed(1)}) ${meetsThreshold ? '✓' : '✗'}`);
-          }
-          return meetsThreshold;
+          // For typing departments: filter by TOTAL hours spent
+          const totalDeptHours = data.totalWastedHrs;
+          const threshold = currentMinHrs;
+          return totalDeptHours >= threshold;
         })
         .sort((a, b) => {
-          // Sort dictation departments first, then by total hours
+          // Sort dictation first, then by total hours (descending)
           if (a[1].isDictation && !b[1].isDictation) return -1;
           if (!a[1].isDictation && b[1].isDictation) return 1;
-
           const aHours = a[1].isDictation ? a[1].currentTimeWithDictation : a[1].totalWastedHrs;
           const bHours = b[1].isDictation ? b[1].currentTimeWithDictation : b[1].totalWastedHrs;
           return bHours - aHours;
         });
 
       return filtered;
+    }
+
+    function updateFilterStats() {
+      const filtered = getFilteredDepartments();
+
+      let totalActiveDoctors = 0;
+      let activeDeptCount = 0;
+
+      filtered.forEach(([deptName, data]) => {
+        totalActiveDoctors += data.activeCount;  // Only active doctors in filtered depts
+        activeDeptCount += 1;
+      });
+
+      document.getElementById('totalUsers').textContent = totalActiveDoctors;
+      document.getElementById('activeDepts').textContent = activeDeptCount;
+      document.getElementById('deptPlural').textContent = activeDeptCount !== 1 ? 'ներ' : '';
     }
 
     function renderDepartments() {
@@ -1064,45 +1103,37 @@
         deptCard.className = 'dept-card';
 
         if (data.isDictation) {
-          // Dictation departments: Show time saved by using dictation
+          // Define speedup per department
+          const speedup = dept === 'CT' ? 2.2 : dept === 'MRT' ? 2.4 : 2.2;
+          const speedupwpm = dept === 'CT' ? 20 : dept === 'MRT' ? 18 : 20;
+          const savedPercent = ((data.timeSaved / data.wouldBeWastedTime) * 100).toFixed(1);
+          const savedHours = data.timeSaved.toFixed(1);
+          const extraPatients = Math.round(data.timeSaved); // 1 hour = ~1 extra patient
+
           deptCard.innerHTML = `
-            <div class="dept-header" onclick="toggleUsers('${dept}')">
-              <div>
-                <div class="dept-name">${dept} 🎤</div>
-                <div class="dept-metric" style="color:var(--success); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
-                  ~${data.currentTimeWithDictation.toFixed(1)} ժ/օր (դիկտացիայով)
+          <div class="dept-header" onclick="toggleUsers('${dept}')">
+            <div>
+              <div class="dept-name">${dept} (Dictation)</div>
+              <div class="dept-metric" style="color:var(--success); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
+                ~${data.currentTimeWithDictation.toFixed(1)} ժամ օրական բաժանմունքը թելադրում է
+              </div>
+              <div style="color:red; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
+                ~${data.wouldBeWastedTime.toFixed(1)} ժամ օրական կծախսվեր, եթե տպեին
+              </div>
+              <div class="savings-info visible" style="background: var(--card); border-color: var(--success);">
+                <div class="savings-header">
+                  <span class="savings-icon">💲</span>
+                  <span class="savings-title" style="color:#6b7280;">${savedPercent}% արագացել է = ${savedHours} ժամ = ~${extraPatients} ավել հիվանդ օրական</span>
                 </div>
-                <div style="color:var(--trust-blue); font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
-                  Խնայում է ${data.timeSaved.toFixed(1)} ժ/օր տպագրման հետ համեմատ
-                </div>
-                <div class="dept-subtext">
-                  ${data.activeCount} ակտիվ ռադիոլոգ${data.activeCount !== 1 ? 'ներ' : ''} •
-                  ${data.total.toLocaleString()} նիշ դիկտացվել է/օր
-                </div>
-                <div class="savings-info visible" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: var(--success);">
-                  <div class="savings-header">
-                    <span class="savings-icon">⚡</span>
-                    <span class="savings-title" style="color: var(--success);">Ժամանակի արդյունավետություն դիկտացիայով</span>
-                  </div>
-                  <div class="savings-comparison">
-                    <div class="comparison-item">
-                      <div class="comparison-label">Ներկայումս (Դիկտացիա)</div>
-                      <div class="comparison-value after">${data.currentTimeWithDictation.toFixed(1)} ժ</div>
-                    </div>
-                    <div class="comparison-item">
-                      <div class="comparison-label">Կլիներ (Տպագրում)</div>
-                      <div class="comparison-value before">${data.wouldBeWastedTime.toFixed(1)} ժ</div>
-                    </div>
-                  </div>
-                  <div class="savings-subtext" style="color: #065f46; margin-top:0.5rem;">
-                    Դիկտացիան 3 անգամ ավելի արագ է - խնայում է ${((data.timeSaved / data.wouldBeWastedTime) * 100).toFixed(0)}% ժամանակ օրական
-                  </div>
+                <div class="savings-subtext" style="color: #065f46; margin-top:0.5rem;">
+                  * Թելադրելը ${speedup} անգամ ավելի արագ է (ծրագրի միջոցով հաշվել ենք, որ տպելը ${speedupwpm} բառ/րոպե արագությամբ է կատարվում, իսկ թելադրելը՝ 44 բառ/րոպե)։
                 </div>
               </div>
-              <div class="dept-toggle">▼</div>
             </div>
-            <div id="users-${dept}" class="users-container"></div>
-          `;
+              <div class="dept-toggle">▼</div>
+          </div>
+          <div id="users-${dept}" class="users-container"></div>
+        `;
         } else {
           // Typing departments: Show wasted time
           deptCard.innerHTML = `
@@ -1110,10 +1141,10 @@
               <div>
                 <div class="dept-name">${dept}</div>
                 <div class="dept-metric" style="color:var(--danger); font-size:1.6rem; font-weight:800; margin:0.5rem 0;">
-                  ~${data.totalWastedHrs.toFixed(1)} կորած ժ/օր
+                  ~${data.totalWastedHrs.toFixed(1)} ժամ օրական բաժանմունքը ծախսում է տպելու վրա 
                 </div>
                 <div style="color:#6b7280; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">
-                  ${data.avgWastedHrsPerDoc.toFixed(1)} ժ/բժիշկ (միջին)
+                  Ամեն բժիշկ <strong class="avg-per-doc">${data.avgWastedHrsPerDoc.toFixed(1)}</strong> ժամ օրական տպում է
                 </div>
                 <div class="dept-subtext">
                   ${data.activeCount} ակտիվ բժիշկ${data.activeCount !== 1 ? 'ներ' : ''} •
@@ -1129,6 +1160,7 @@
       });
 
       updateFilterStats();
+      updateSavingsFormulaText();
     }
 
     window.toggleUsers = function (dept) {
@@ -1198,11 +1230,11 @@
         if (isDictDept) {
           // Dictation department users
           const currentTime = user.chars / CHARS_PER_HOUR_TYPED;
-          const wouldBeTime = currentTime * DICTATION_SPEEDUP;
+          const wouldBeTime = currentTime * DICTATION_SPEEDUP_RAD;
           const saved = wouldBeTime - currentTime;
 
           item.innerHTML = `
-            <div class="user-name">${user.original} 🎤</div>
+            <div class="user-name">${user.original}</div>
             <div class="user-metric">
               ${user.chars.toLocaleString()} նիշ/օր •
               <span style="color:var(--success)">${currentTime.toFixed(1)} ժ</span>
@@ -1252,18 +1284,18 @@
       if (isDictDept) {
         // For dictation departments: show current time and what it would be if typing
         const currentData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
-        const wouldBeData = activeUsers.map(u => (u.chars / CHARS_PER_HOUR_TYPED) * DICTATION_SPEEDUP);
+        const wouldBeData = activeUsers.map(u => (u.chars / CHARS_PER_HOUR_TYPED) * DICTATION_SPEEDUP_RAD);
 
         datasets = [
           {
-            label: 'Ներկայիս ժամանակ (դիկտացիայով)',
+            label: 'Թելադրելու վրա ծախսած ժամանակը',
             data: currentData,
             backgroundColor: 'rgba(16, 185, 129, 0.9)',
             borderColor: 'rgba(16, 185, 129, 1)',
             borderWidth: 1,
           },
           {
-            label: 'Կլիներ (եթե տպագրեին)',
+            label: 'Եթե տպեին թելադրելու փոխարեն',
             data: wouldBeData,
             backgroundColor: 'rgba(239, 68, 68, 0.5)',
             borderColor: 'rgba(239, 68, 68, 1)',
@@ -1275,7 +1307,7 @@
         const wastedData = activeUsers.map(u => u.chars / CHARS_PER_HOUR_TYPED);
 
         datasets = [{
-          label: 'Ներկայիս կորած ժամանակ',
+          label: 'Տպելու վրա ծախսած ժամանակը',
           data: wastedData,
           backgroundColor: 'rgba(239, 68, 68, 0.9)',
           borderColor: 'rgba(239, 68, 68, 1)',
@@ -1307,13 +1339,17 @@
     function applyFilter() {
       const input = document.getElementById('minHrsFilter');
       const value = input.value.trim();
-      const newMinHrs = (value === '' || isNaN(value)) ? 0 : parseFloat(value);
+      const minutesInput = (value === '' || isNaN(value)) ? 0 : parseFloat(value);
+
+      // Convert minutes to hours
+      const newMinHrs = minutesInput / 60;
 
       if (newMinHrs !== currentMinHrs) {
         currentMinHrs = newMinHrs;
-        console.log('Filter applied:', currentMinHrs);
+        console.log('Filter applied (minutes):', minutesInput, '→ hours:', currentMinHrs.toFixed(2));
         renderDepartments();
         renderDeptChart();
+        updateSavingsFormulaText();
       }
     }
 
@@ -1331,7 +1367,7 @@
       if (typingDepts.length > 0) {
         const wastedData = filtered.map(([_, d]) => d.isDictation ? 0 : d.totalWastedHrs);
         datasets.push({
-          label: 'Ներկայիս կորած ժամանակ (Տպագրում)',
+          label: 'Տպելու վրա ծախսած ժամանակը',
           data: wastedData,
           backgroundColor: 'rgba(239,68,68,0.9)',
           borderColor: 'rgba(239,68,68,1)',
@@ -1344,7 +1380,7 @@
         const wouldBeData = filtered.map(([_, d]) => d.isDictation ? d.wouldBeWastedTime : 0);
 
         datasets.push({
-          label: 'Ներկայիս ժամանակ (դիկտացիայով)',
+          label: 'Թելադրելու վրա ծախսած ժամանակը',
           data: currentData,
           backgroundColor: 'rgba(16, 185, 129, 0.9)',
           borderColor: 'rgba(16, 185, 129, 1)',
@@ -1352,7 +1388,7 @@
         });
 
         datasets.push({
-          label: 'Կլիներ (եթե տպագրեին)',
+          label: 'Եթե տպեին թելադրելու փոխարեն',
           data: wouldBeData,
           backgroundColor: 'rgba(239, 68, 68, 0.5)',
           borderColor: 'rgba(239, 68, 68, 1)',
@@ -1382,114 +1418,16 @@
       });
     }
 
-    // window.toggleDictation = function () {
-    //   const btn = document.getElementById('dictationToggle');
-    //   const deptsDiv = document.getElementById('departments');
-    //   const chartContainer = document.getElementById('chartContainer');
-    //   const dictationSection = document.getElementById('dictationSection');
-    //   const subtitle = document.getElementById('subtitle');
-    //   const filterPanel = document.getElementById('filterPanel');
-
-    //   if (isDictationVisible) {
-    //     dictationSection.classList.add('hidden');
-    //     deptsDiv.classList.remove('hidden');
-    //     chartContainer.style.display = 'block';
-    //     filterPanel.style.display = 'block';
-    //     subtitle.textContent = 'Ամբողջ ժամանակը ԺԱՄԵՐՈՎ • Կարմիր = Կորած ժամանակ (Տպագրում) • Կանաչ = Խնայված ժամանակ (Դիկտացիա)';
-    //     btn.textContent = 'Ցուցադրել դիկտացիայի տվյալները';
-    //     btn.classList.remove('dictation-btn');
-    //     isDictationVisible = false;
-    //   } else {
-    //     if (rawDataDictation.length === 0) {
-    //       loadDictationData();
-    //     } else {
-    //       renderDictationData();
-    //     }
-    //     deptsDiv.classList.add('hidden');
-    //     chartContainer.style.display = 'none';
-    //     filterPanel.style.display = 'none';
-    //     dictationSection.classList.remove('hidden');
-    //     btn.textContent = 'Թաքցնել դիկտացիայի տվյալները';
-    //     btn.classList.add('dictation-btn');
-    //     subtitle.textContent = 'Դիկտացիայի տվյալներ • Կարմիր = Խնայված ժամանակ դիկտացիայի միջոցով';
-    //     isDictationVisible = true;
-    //   }
-    // };
-
-    // function renderDictationData() {
-    //   const list = document.getElementById('dictationList');
-    //   const sortedData = [...rawDataDictation].sort((a, b) => b.chars - a.chars);
-    //   list.innerHTML = '';
-    //   sortedData.forEach(item => {
-    //     const div = document.createElement('div');
-    //     div.className = 'dictation-item';
-    //     div.innerHTML = `
-    //       <div class="user-name">${item.original}</div>
-    //       <div class="dictation-metric">${item.chars.toLocaleString()} chars/day</div>
-    //     `;
-    //     list.appendChild(div);
-    //   });
-    //   renderDictationChart(sortedData);
-    // }
-
-    // function renderDictationChart(data) {
-    //   const topData = data.slice(0, 10);
-    //   const ctx = document.getElementById('dictationChart').getContext('2d');
-    //   const labels = topData.map(u => u.original.split(' ')[0]);
-    //   const charsData = topData.map(u => u.chars);
-    //   if (window.dictationChart && typeof window.dictationChart.destroy === 'function') {
-    //     window.dictationChart.destroy();
-    //   }
-    //   window.dictationChart = new Chart(ctx, {
-    //     type: 'bar',
-    //     data: {
-    //       labels,
-    //       datasets: [
-    //         {
-    //           label: 'Օրական նիշեր (Դիկտացված)',
-    //           data: charsData,
-    //           backgroundColor: 'rgba(239, 68, 68, 0.8)',
-    //           borderColor: 'rgba(239, 68, 68, 1)',
-    //           borderWidth: 1,
-    //         }
-    //       ]
-    //     },
-    //     options: {
-    //       indexAxis: 'y',
-    //       responsive: true,
-    //       plugins: {
-    //         legend: { position: 'top' },
-    //         tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.formattedValue} նիշ/օր` } }
-    //       },
-    //       scales: {
-    //         x: {
-    //           beginAtZero: true,
-    //           title: { display: true, text: 'Նիշեր օրական' }
-    //         },
-    //         y: {
-    //           grid: { display: false }
-    //         }
-    //       }
-    //     }
-    //   });
-    // }
-
-    function updateFilterStats() {
-      const filtered = getFilteredDepartments();
-      let filteredDoctors = 0;
-
-      filtered.forEach(([_, dept]) => {
-        filteredDoctors += dept.users.length;
-      });
-
-      const visibleDepts = filtered.length;
-
-      document.getElementById('totalUsers').textContent = filteredDoctors;
-      document.getElementById('activeDepts').textContent = visibleDepts;
-      document.getElementById('deptPlural').textContent = '';
-    }
-
     function updateSavingsBanner() {
+      const totalTimeAfterEl = document.getElementById('totalTimeAfter');
+      const totalTimeBeforeEl = document.getElementById('totalTimeBefore');
+      const savingsPercentEl = document.getElementById('savingsPercent');
+
+      // Safety check - exit if elements don't exist
+      if (!totalTimeAfterEl || !totalTimeBeforeEl || !savingsPercentEl) {
+        return;
+      }
+
       const filtered = getFilteredDepartments();
       let totalTimeAfter = 0;
       let totalWasted = 0;
@@ -1501,45 +1439,29 @@
 
       const savingsPercent = totalWasted > 0 ? ((1 - totalTimeAfter / totalWasted) * 100).toFixed(0) : 0;
 
-      document.getElementById('totalTimeAfter').textContent = totalTimeAfter.toFixed(1);
-      document.getElementById('totalTimeBefore').textContent = totalWasted.toFixed(1);
-      document.getElementById('savingsPercent').textContent = savingsPercent + '%';
+      totalTimeAfterEl.textContent = totalTimeAfter.toFixed(1);
+      totalTimeBeforeEl.textContent = totalWasted.toFixed(1);
+      savingsPercentEl.textContent = savingsPercent + '%';
     }
 
-    window.updateSort = function (dept, field, value) {
-      sortStates[dept][field] = value;
-      renderUserSection(dept);
-    };
+    function updateSavingsFormulaText() {
+      const filtered = getFilteredDepartments();
+      let totalWastedHrs = 0;
 
-    window.toggleUserActive = function (dept, user) {
-      user.isActive = !user.isActive;
-
-      const deptData = departments[dept];
-      deptData.total = 0;
-      deptData.activeCount = 0;
-
-      deptData.users.forEach(u => {
-        if (u.isActive) {
-          deptData.total += u.chars;
-          deptData.activeCount += 1;
-        }
+      filtered.forEach(([_, dept]) => {
+        if (dept.isDictation) return; // Skip CT/MRT
+        totalWastedHrs += dept.totalWastedHrs;
       });
 
-      if (deptData.isDictation) {
-        deptData.currentTimeWithDictation = deptData.total / CHARS_PER_HOUR_TYPED;
-        deptData.wouldBeWastedTime = deptData.currentTimeWithDictation * DICTATION_SPEEDUP;
-        deptData.timeSaved = deptData.wouldBeWastedTime - deptData.currentTimeWithDictation;
-        deptData.avgCurrentTimePerDoc = deptData.activeCount > 0 ? deptData.currentTimeWithDictation / deptData.activeCount : 0;
-      } else {
-        deptData.totalWastedHrs = deptData.total / CHARS_PER_HOUR_TYPED;
-        deptData.avgWastedHrsPerDoc = deptData.activeCount > 0 ? deptData.totalWastedHrs / deptData.activeCount : 0;
-        deptData.timeWithDictation = deptData.totalWastedHrs / DICTATION_SPEEDUP;
-      }
+      const savedHours = (totalWastedHrs * 2 / 3).toFixed(1);
+      const totalHrsDisplay = totalWastedHrs.toFixed(1);
 
-      renderUserSection(dept);
-      renderDepartments();
-      renderDeptChart();
-    };
+      const savedEl = document.getElementById('savedHours');
+      const totalEl = document.getElementById('totalWastedHours');
+
+      if (savedEl) savedEl.textContent = savedHours;
+      if (totalEl) totalEl.textContent = totalHrsDisplay;
+    }
 
     function updateLastRefreshTime() {
       const timestamp = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
@@ -1561,14 +1483,24 @@
         try {
           rawDataTyping = JSON.parse(cachedTyping);
           processData();
-          document.getElementById('filterPanel').style.display = 'block';
-          document.getElementById('minHrsFilter').value = '0';
-          currentMinHrs = 0;
+
+          const filterPanel = document.getElementById('filterPanel');
+          const minHrsFilter = document.getElementById('minHrsFilter');
+          const loading = document.getElementById('loading');
+          const chartContainer = document.getElementById('chartContainer');
+          const dictationToggle = document.getElementById('dictationToggle');
+
+          if (filterPanel) filterPanel.style.display = 'block';
+          if (minHrsFilter) minHrsFilter.value = '100';
+          currentMinHrs = 1.6;
+
           renderDepartments();
           renderDeptChart();
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('chartContainer').style.display = 'block';
-          document.getElementById('dictationToggle').style.display = 'inline-block';
+
+          if (loading) loading.style.display = 'none';
+          if (chartContainer) chartContainer.style.display = 'block';
+          if (dictationToggle) dictationToggle.style.display = 'inline-block';
+
           updateLastRefreshTime();
         } catch (err) {
           console.error('Error loading cached data:', err);
@@ -1604,6 +1536,3 @@
 </body>
 
 </html>
-
-
-
